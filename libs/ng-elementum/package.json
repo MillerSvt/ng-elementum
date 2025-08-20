@@ -1,0 +1,26 @@
+{
+  "name": "ng-elementum",
+  "version": "0.0.0",
+  "peerDependencies": {
+    "@angular/core": "^20.0.0",
+    "@angular/common": "^20.0.0",
+    "@angular/router": "^20.0.0",
+    "@angular/platform-browser": "^20.0.0"
+  },
+  "sideEffects": false,
+  "contributors": [
+    {
+      "name": "Svyatoslav Zaytsev",
+      "email": "sviatsv@yandex.ru",
+      "url": "https://github.com/MillerSvt"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MillerSvt/ng-elementum.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MillerSvt/ng-elementum/issues"
+  },
+  "homepage": "https://github.com/MillerSvt/ng-elementum/tree/master/libs/ng-elementum#readme"
+}
