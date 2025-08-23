@@ -1,5 +1,11 @@
 name: Release
 
+env:
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  CI: true
+
 on:
   workflow_dispatch:
     inputs:
@@ -27,10 +33,6 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
-    env:
-      CI: true
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -53,9 +55,6 @@ jobs:
           git config user.email "ci@example.com"
 
       - name: Nx release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           if [ "${{ github.event.inputs.releaseType }}" = "auto" ]; then
             npx nx release --yes
