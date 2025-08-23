@@ -144,7 +144,7 @@ const MyElement = createCustomElement(MyComponent, {
 
 customElements.define('my-element', MyElement);
 
-const el = document.querySelector('my-element') as any;
+const el = document.querySelector('my-element');
 await el.open(); // Calls MyComponent.open()
 await el.close(); // Calls MyComponent.close()
 ```
