@@ -202,6 +202,28 @@ This element owns its router and URL state, does not conflict with any other Ang
 
 ---
 
+## Using HttpClient in `platform` level
+
+By default, Angular does not allow `HttpClient` to be provided at the **platform** level.
+The `provideHttpClient()` API can only be used in the application root (via `bootstrapApplication`), not in `platformBrowser` `StaticProvider`s.
+
+To work around this limitation, `ng-elementum/http` exposes a helper function: `createHttpClient()`.
+It allows you to instantiate a standalone `HttpClient` and register it at the platform level:
+
+```ts
+import { createHttpClient } from 'ng-elementum/http';
+import { HttpClient } from '@angular/common/http';
+
+const platform = platformBrowser([
+  {
+    provide: HttpClient,
+    useFactory: () => createHttpClient(),
+  },
+]);
+```
+
+---
+
 ## TypeScript Support
 
 Declare typings to unlock IntelliSense and type safety:
