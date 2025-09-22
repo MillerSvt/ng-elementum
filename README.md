@@ -224,6 +224,36 @@ const platform = platformBrowser([
 
 ---
 
+## Platform Effects Interop
+
+`ng-elementum` introduces `providePlatformEffectInterop()` to allow running Angular effects at the **platform** level.
+
+Normally, Angular effects are scoped to an application instance. But you can use `providePlatformEffectInterop()` to
+run effects at the platform level:
+
+```typescript
+import { platformBrowser } from '@angular/platform-browser';
+import { providePlatformEffectInterop } from 'ng-elementum';
+import { Injectable } from '@angular/core';
+
+const platform = platformBrowser([providePlatformEffectInterop()]);
+
+@Injectable({
+  providedIn: `platform`,
+})
+class SomeService {
+  constructor() {
+    effect(() => {
+      console.log('Effect running at platform level');
+    });
+  }
+}
+
+platform.injector.get(SomeService);
+```
+
+---
+
 ## TypeScript Support
 
 Declare typings to unlock IntelliSense and type safety:
