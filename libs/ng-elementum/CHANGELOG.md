@@ -1,3 +1,13 @@
+## 0.3.0 (2025-09-22)
+
+### 🚀 Features
+
+- **ng-elementum:** add `providePlatformEffectInterop` helper. ([35a6523](https://github.com/MillerSvt/ng-elementum/commit/35a6523))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 0.2.0 (2025-09-19)
 
 ### 🚀 Features
