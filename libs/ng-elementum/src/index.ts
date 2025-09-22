@@ -23,5 +23,6 @@ export {
   NgElementStrategyEvent,
   NgElementumStrategyFactory,
 } from './lib/element-strategy';
+export { providePlatformEffectInterop } from './lib/provide-platform-effect-interop';
 
 // This file only reexports content of the `src` folder. Keep it that way.
