@@ -1,4 +1,8 @@
-import type { HttpFeature, HttpFeatureKind } from '@angular/common/http';
+import {
+  HttpFeature,
+  HttpFeatureKind,
+  withNoXsrfProtection,
+} from '@angular/common/http';
 import { XhrFactory } from '@angular/common';
 import {
   HttpClient,
@@ -66,6 +70,13 @@ export function createHttpClient(
   assertInInjectionContext(createHttpClient);
 
   const scope = inject(ɵINJECTOR_SCOPE);
+
+  if (
+    scope === 'platform' &&
+    !features.find((f) => f.ɵkind === HttpFeatureKind.CustomXsrfConfiguration)
+  ) {
+    features.push(withNoXsrfProtection());
+  }
 
   const injector = createEnvironmentInjector(
     [
