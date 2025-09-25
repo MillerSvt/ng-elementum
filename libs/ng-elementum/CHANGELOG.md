@@ -1,3 +1,17 @@
+## 0.4.0 (2025-09-25)
+
+### 🚀 Features
+
+- **ng-elementum:** add resource interop ([5e14de2](https://github.com/MillerSvt/ng-elementum/commit/5e14de2))
+
+### 🩹 Fixes
+
+- **ng-elementum:** fix HttpClient working without xsrf features ([fb9ce6d](https://github.com/MillerSvt/ng-elementum/commit/fb9ce6d))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 0.3.1 (2025-09-22)
 
 ### 🩹 Fixes
