@@ -78,6 +78,21 @@ export class MemoryLocationStrategy extends LocationStrategy {
     this.triggerPopstate();
   }
 
+  public override historyGo(relativePosition: number) {
+    const originHistoryIndex = this.historyIndex;
+
+    this.historyIndex = Math.max(
+      0,
+      Math.min(this.history.length - 1, this.historyIndex + relativePosition)
+    );
+
+    if (this.historyIndex === originHistoryIndex) {
+      return;
+    }
+
+    this.triggerPopstate();
+  }
+
   public onPopState(fn: LocationChangeListener): void {
     this.locationChangeListeners.push(fn);
   }
