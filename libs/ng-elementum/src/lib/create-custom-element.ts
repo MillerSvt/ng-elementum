@@ -1,9 +1,11 @@
 import {
   ApplicationConfig,
+  getPlatform,
   InputSignal,
   mergeApplicationConfig,
   provideZonelessChangeDetection,
   reflectComponentType,
+  runInInjectionContext,
   Signal,
   Type,
 } from '@angular/core';
@@ -138,8 +140,10 @@ export type NgElementumConfig<T> = {
   exposedMethods?: ExtractPublicMethods<T>[];
   /**
    * The config for application.
+   *
+   * If function passed, it will be called within the platform injection context.
    */
-  applicationConfig: ApplicationConfig;
+  applicationConfig: ApplicationConfig | (() => ApplicationConfig);
 };
 
 /**
@@ -191,9 +195,16 @@ export function createCustomElement<T, const C extends NgElementumConfig<T>>(
 
     readonly #ngElementumInputsCache = new Map<string, any>();
     #ngElementumStrategy: NgElementumStrategy | undefined;
+    readonly #ngElementumConfig: ApplicationConfig =
+      typeof config.applicationConfig === 'function'
+        ? runInInjectionContext(
+            getPlatform()!.injector,
+            config.applicationConfig
+          )
+        : config.applicationConfig;
 
     protected readonly ngElementumStrategy = createApplication(
-      mergeApplicationConfig(config.applicationConfig, {
+      mergeApplicationConfig(this.#ngElementumConfig, {
         providers: [provideZonelessChangeDetection()],
       })
     ).then(
