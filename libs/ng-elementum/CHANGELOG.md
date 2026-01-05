@@ -1,3 +1,14 @@
+## 0.5.0 (2026-01-05)
+
+### 🚀 Features
+
+- **ng-elementum:** add `applicationConfig` factory ([#1](https://github.com/MillerSvt/ng-elementum/pull/1))
+- **ng-elementum:** implement LocationStrategy.historyGo method ([c4cc9fd](https://github.com/MillerSvt/ng-elementum/commit/c4cc9fd))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 0.4.0 (2025-09-25)
 
 ### 🚀 Features
