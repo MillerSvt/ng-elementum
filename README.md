@@ -224,6 +224,52 @@ const platform = platformBrowser([
 
 ---
 
+## Dynamic `ApplicationConfig`
+
+`ng-elementum` supports passing not only a static `ApplicationConfig`, but also a factory function that returns `ApplicationConfig`.
+
+The factory is executed inside the platform injection context, so you can use Angular’s `inject()` API to access platform-level providers while computing the configuration.
+
+### Why this is useful
+
+This is especially important for embeddable widgets where:
+
+- Config depends on runtime data (host page, URL, locale, feature flags)
+- Platform-level services (bridges, adapters, environment providers) must participate in config creation
+
+### Example
+
+```ts
+import { createCustomElement } from 'ng-elementum';
+import { inject } from '@angular/core';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+
+import { MyComponent } from './my.component';
+import { HOST_BRIDGE } from './host-bridge.token';
+import { API_BASE_URL } from './api.token';
+import { authInterceptor } from './auth.interceptor';
+
+const MyElement = createCustomElement(MyComponent, {
+  applicationConfig: () => {
+    const hostBridge = inject(HOST_BRIDGE);
+
+    const providers = [
+      // Always present:
+      { provide: API_BASE_URL, useValue: hostBridge.getApiBaseUrl() },
+
+      // Conditionally present (added only when enabled):
+      ...(hostBridge.isAuthEnabled() ? [provideHttpClient(withInterceptors([authInterceptor]))] : []),
+    ];
+
+    return { providers };
+  },
+});
+
+customElements.define('my-element', MyElement);
+```
+
+---
+
 ## Platform Effects Interop
 
 `ng-elementum` introduces `providePlatformEffectInterop()` to allow running Angular effects at the **platform** level.
