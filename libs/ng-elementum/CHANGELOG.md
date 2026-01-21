@@ -1,3 +1,13 @@
+## 0.5.1 (2026-01-21)
+
+### 🩹 Fixes
+
+- **ng-elementum:** push component-ref to ApplicationRef ([2094f60](https://github.com/MillerSvt/ng-elementum/commit/2094f60))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 0.5.0 (2026-01-05)
 
 ### 🚀 Features
