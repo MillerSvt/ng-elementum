@@ -1,4 +1,5 @@
 import {
+  APP_BOOTSTRAP_LISTENER,
   ApplicationRef,
   ComponentMirror,
   ComponentRef,
@@ -184,20 +185,24 @@ export class ComponentNgElementumStrategy implements NgElementumStrategy {
       this.componentMirror.ngContentSelectors
     );
 
-    this.componentRef = createComponent(this.component, {
+    const componentRef = (this.componentRef = createComponent(this.component, {
       environmentInjector: this.appRef.injector,
       projectableNodes: projectableNodes,
       hostElement: element,
-    });
+    }));
 
     this.initializeInputs();
-    this.initializeOutputs(element, this.componentRef);
+    this.initializeOutputs(element, componentRef);
 
-    this.appRef.attachView(this.componentRef.hostView);
-    this.componentRef.hostView.detectChanges();
+    this.appRef.attachView(componentRef.hostView);
+    componentRef.hostView.detectChanges();
 
-    this.appRef.components.push(this.componentRef);
+    this.appRef.components.push(componentRef);
     this.appRef.componentTypes.push(this.component);
+
+    const listeners = this.appRef.injector.get(APP_BOOTSTRAP_LISTENER, []);
+
+    listeners.forEach((listener) => listener(componentRef));
   }
 
   /** Set any stored initial inputs on the component's properties. */
