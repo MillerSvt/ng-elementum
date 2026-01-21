@@ -1,6 +1,6 @@
 {
   "name": "ng-elementum",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "peerDependencies": {
     "@angular/core": "^20.0.0",
     "@angular/common": "^20.0.0",

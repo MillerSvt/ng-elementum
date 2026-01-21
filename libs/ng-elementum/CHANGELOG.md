@@ -1,3 +1,13 @@
+## 0.5.2 (2026-01-21)
+
+### 🩹 Fixes
+
+- **ng-elementum:** add call bootstrap listeners ([e8ce8ae](https://github.com/MillerSvt/ng-elementum/commit/e8ce8ae))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 0.5.1 (2026-01-21)
 
 ### 🩹 Fixes
