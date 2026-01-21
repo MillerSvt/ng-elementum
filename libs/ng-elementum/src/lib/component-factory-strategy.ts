@@ -109,6 +109,14 @@ export class ComponentNgElementumStrategy implements NgElementumStrategy {
 
       if (this.componentRef !== null) {
         this.componentRef.destroy();
+        this.appRef.components.splice(
+          this.appRef.components.indexOf(this.componentRef),
+          1
+        );
+        this.appRef.componentTypes.splice(
+          this.appRef.componentTypes.indexOf(this.component),
+          1
+        );
         this.componentRef = null;
       }
     });
@@ -187,6 +195,9 @@ export class ComponentNgElementumStrategy implements NgElementumStrategy {
 
     this.appRef.attachView(this.componentRef.hostView);
     this.componentRef.hostView.detectChanges();
+
+    this.appRef.components.push(this.componentRef);
+    this.appRef.componentTypes.push(this.component);
   }
 
   /** Set any stored initial inputs on the component's properties. */
