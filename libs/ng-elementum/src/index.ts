@@ -18,5 +18,7 @@ export {
   NgElementumConstructor,
   WithProperties,
 } from './lib/create-custom-element';
+export { platformElementum } from './lib/platform';
+export { createApplicationSync } from './lib/create-application-sync';
 
 // This file only reexports content of the `src` folder. Keep it that way.
