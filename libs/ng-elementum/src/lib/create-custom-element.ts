@@ -1,5 +1,6 @@
 import {
   ApplicationConfig,
+  ComponentMirror,
   getPlatform,
   InputSignal,
   mergeApplicationConfig,
@@ -9,14 +10,11 @@ import {
   Signal,
   Type,
 } from '@angular/core';
-import { createApplication } from '@angular/platform-browser';
 
-import { ComponentNgElementumStrategyFactory } from './component-factory-strategy';
-import {
-  NgElementumStrategy,
-  NgElementumStrategyFactory,
-} from './element-strategy';
+import { NgElementumStrategy } from './component-strategy';
 import { getDefaultAttributeToPropertyInputs } from './utils';
+import { offCreatePlatform, onCreatePlatform } from './platform';
+import { createApplicationSync } from './create-application-sync';
 
 /**
  * Prototype for a class constructor based on an Angular component
@@ -46,10 +44,27 @@ export interface NgElementumConstructor<P> {
  * @publicApi
  */
 export abstract class NgElementum extends HTMLElement {
-  /**
-   * The strategy that controls how a component is transformed in a custom element.
-   */
-  protected abstract ngElementumStrategy: Promise<NgElementumStrategy>;
+  readonly #ngElementumInputsCache = new Map<string, any>();
+  readonly #ngElementumComponentType: ComponentMirror<any>;
+  readonly #ngElementumAttributeInputs: Record<string, [string, any]>;
+  readonly #ngElementumOnCreatePlatformCallback = () =>
+    this.connectedCallback();
+  #ngElementumCachedStrategy: NgElementumStrategy | undefined;
+  #ngElementumPreventRemove = false;
+  #ngElementumConfig: NgElementumConfig<any>;
+
+  constructor(
+    componentType: ComponentMirror<any>,
+    config: NgElementumConfig<any>
+  ) {
+    super();
+
+    this.#ngElementumConfig = config;
+    this.#ngElementumComponentType = componentType;
+    this.#ngElementumAttributeInputs = getDefaultAttributeToPropertyInputs(
+      componentType.inputs
+    );
+  }
 
   /**
    * Prototype for a handler that responds to a change in an observed attribute.
@@ -58,27 +73,151 @@ export abstract class NgElementum extends HTMLElement {
    * @param newValue The new value of the attribute.
    * @returns Nothing.
    */
-  abstract attributeChangedCallback(
+  attributeChangedCallback(
     attrName: string,
     oldValue: string,
     newValue: string
-  ): void;
+  ) {
+    const [propName] = this.#ngElementumAttributeInputs[attrName];
+
+    this.setInputValue(propName, newValue);
+  }
 
   /**
    * Prototype for a handler that responds to the insertion of the custom element in the DOM.
    * @returns Nothing.
    */
-  abstract connectedCallback(): void;
+  connectedCallback() {
+    const strategy = this.#ngElementumStrategy;
+
+    if (!strategy) {
+      onCreatePlatform(this.#ngElementumOnCreatePlatformCallback);
+      return;
+    }
+
+    strategy.connect(this);
+
+    for (const [attrName, [propName, transform]] of Object.entries(
+      this.#ngElementumAttributeInputs
+    )) {
+      if (!this.hasAttribute(attrName)) {
+        continue;
+      }
+
+      const value = this.getAttribute(attrName)!;
+
+      strategy.setInputValue(propName, transform ? transform(value) : value);
+    }
+  }
 
   /**
    * Prototype for a handler that responds to the deletion of the custom element from the DOM.
    * @returns Nothing.
    */
-  abstract disconnectedCallback(): void;
+  disconnectedCallback() {
+    offCreatePlatform(this.#ngElementumOnCreatePlatformCallback);
+    const strategy = this.#ngElementumCachedStrategy;
 
-  abstract getInputValue(propName: string): any;
+    if (!strategy) {
+      return;
+    }
 
-  abstract setInputValue(propName: string, value: string): void;
+    strategy.disconnect();
+  }
+
+  getInputValue(propName: string): any {
+    if (
+      this.#ngElementumCachedStrategy &&
+      !this.#ngElementumInputsCache.has(propName)
+    ) {
+      this.#ngElementumInputsCache.set(
+        propName,
+        this.#ngElementumCachedStrategy.getInputValue(propName)
+      );
+    }
+
+    return this.#ngElementumInputsCache.get(propName) ?? null;
+  }
+
+  setInputValue(propName: string, newValue: string): void {
+    this.#ngElementumInputsCache.set(propName, newValue);
+
+    if (!this.#ngElementumCachedStrategy) {
+      return;
+    }
+
+    const transform = this.#ngElementumComponentType.inputs.find(
+      (input) => input.propName === propName
+    )?.transform;
+
+    this.#ngElementumCachedStrategy.setInputValue(
+      propName,
+      transform ? transform(newValue) : newValue
+    );
+  }
+
+  override remove(): void {
+    if (this.#ngElementumPreventRemove) {
+      if (this.shadowRoot) {
+        this.shadowRoot.innerHTML = '';
+      } else {
+        this.innerHTML = '';
+      }
+    } else {
+      super.remove();
+    }
+  }
+
+  override attachShadow(init: ShadowRootInit): ShadowRoot {
+    return this.shadowRoot ?? super.attachShadow(init);
+  }
+
+  #ngElementumCreateStrategy(): NgElementumStrategy | undefined {
+    const applicationConfig = getApplicationConfig(
+      this.#ngElementumConfig.applicationConfig
+    );
+
+    if (!applicationConfig) {
+      return;
+    }
+
+    const applicationRef = createApplicationSync(applicationConfig);
+
+    if (applicationRef.destroyed) {
+      return;
+    }
+
+    getPlatform()?.onDestroy(() => {
+      this.#ngElementumPreventRemove = true;
+      applicationRef.destroy();
+      this.#ngElementumPreventRemove = false;
+
+      if (this.isConnected) {
+        onCreatePlatform(this.#ngElementumOnCreatePlatformCallback);
+      }
+    });
+
+    applicationRef.onDestroy(() => {
+      this.#ngElementumCachedStrategy = undefined;
+    });
+
+    return new NgElementumStrategy(
+      this.#ngElementumComponentType.type,
+      applicationRef
+    );
+  }
+
+  /**
+   * The strategy that controls how a component is transformed in a custom element.
+   */
+  get #ngElementumStrategy(): NgElementumStrategy | undefined {
+    return (this.#ngElementumCachedStrategy ??=
+      this.#ngElementumCreateStrategy());
+  }
+
+  protected get ngElementumCachedStrategy(): NgElementumStrategy | undefined {
+    return this.#ngElementumCachedStrategy;
+  }
 }
 
 /**
@@ -105,7 +244,7 @@ type ExtractPublicMethods<T> = {
 type GetExposedMethods<C extends NgElementumConfig<any>> =
   C['exposedMethods'] extends (infer M extends string)[] ? M : never;
 
-type ExposeMethods<T, C extends NgElementumConfig<T>> = {
+export type ExposeMethods<T, C extends NgElementumConfig<T>> = {
   [K in GetExposedMethods<C>]: K extends keyof T
     ? T[K] extends (...args: infer A) => infer R
       ? (...args: A) => R extends Promise<any> ? R : Promise<R>
@@ -115,7 +254,7 @@ type ExposeMethods<T, C extends NgElementumConfig<T>> = {
 
 type UnwrapInput<T> = T extends InputSignal<infer V> ? V | null : never;
 
-type ExposeInputs<T> = {
+export type ExposeInputs<T> = {
   [K in keyof T as T[K] extends InputSignal<any> ? K : never]: UnwrapInput<
     T[K]
   >;
@@ -129,11 +268,6 @@ type ExposeInputs<T> = {
  * @publicApi
  */
 export type NgElementumConfig<T> = {
-  /**
-   * An optional custom strategy factory to use instead of the default.
-   * The strategy controls how the transformation is performed.
-   */
-  strategyFactory?: NgElementumStrategyFactory;
   /**
    * An optional list of methods to expose on the custom element.
    */
@@ -175,14 +309,10 @@ export function createCustomElement<T, const C extends NgElementumConfig<T>>(
   const componentType = reflectComponentType(component);
 
   if (!componentType) {
-    throw new Error('cannot read component type');
+    throw new Error('Cannot read component type');
   }
 
   const { inputs } = componentType;
-
-  const strategyFactory =
-    config.strategyFactory ||
-    new ComponentNgElementumStrategyFactory(component);
 
   const attributeToPropertyInputs = getDefaultAttributeToPropertyInputs(inputs);
 
@@ -193,92 +323,8 @@ export function createCustomElement<T, const C extends NgElementumConfig<T>>(
       attributeToPropertyInputs
     );
 
-    readonly #ngElementumInputsCache = new Map<string, any>();
-    #ngElementumStrategy: NgElementumStrategy | undefined;
-    readonly #ngElementumConfig: ApplicationConfig =
-      typeof config.applicationConfig === 'function'
-        ? runInInjectionContext(
-            getPlatform()!.injector,
-            config.applicationConfig
-          )
-        : config.applicationConfig;
-
-    protected readonly ngElementumStrategy = createApplication(
-      mergeApplicationConfig(this.#ngElementumConfig, {
-        providers: [provideZonelessChangeDetection()],
-      })
-    ).then(
-      (applicationRef) =>
-        (this.#ngElementumStrategy = strategyFactory.create(applicationRef))
-    );
-
-    override async attributeChangedCallback(
-      attrName: string,
-      oldValue: string,
-      newValue: string
-    ) {
-      const [propName] = attributeToPropertyInputs[attrName];
-
-      this.setInputValue(propName, newValue);
-    }
-
-    override async connectedCallback() {
-      const strategy = await this.ngElementumStrategy;
-
-      if (this.isConnected) {
-        strategy.connect(this);
-
-        for (const [attrName, [propName, transform]] of Object.entries(
-          attributeToPropertyInputs
-        )) {
-          if (!this.hasAttribute(attrName)) {
-            continue;
-          }
-
-          const value = this.getAttribute(attrName)!;
-
-          strategy.setInputValue(propName, value, transform);
-        }
-      }
-    }
-
-    override async disconnectedCallback() {
-      const strategy = await this.ngElementumStrategy;
-
-      if (strategy && !this.isConnected) {
-        strategy.disconnect();
-      }
-    }
-
-    override getInputValue(propName: string): any {
-      if (
-        this.#ngElementumStrategy &&
-        !this.#ngElementumInputsCache.has(propName)
-      ) {
-        this.#ngElementumInputsCache.set(
-          propName,
-          this.#ngElementumStrategy?.getInputValue(propName)
-        );
-      }
-
-      return this.#ngElementumInputsCache.get(propName) ?? null;
-    }
-
-    override setInputValue(propName: string, newValue: string): void {
-      this.#ngElementumInputsCache.set(propName, newValue);
-
-      const transform = inputs.find(
-        (input) => input.propName === propName
-      )?.transform;
-
-      if (this.#ngElementumStrategy) {
-        this.#ngElementumStrategy.setInputValue(propName, newValue, transform);
-        return;
-      }
-
-      this.ngElementumStrategy.then((strategy) => {
-        strategy.setInputValue(propName, newValue, transform);
-      });
+    constructor() {
+      super(componentType!, config);
     }
   }
 
@@ -292,10 +338,16 @@ export function createCustomElement<T, const C extends NgElementumConfig<T>>(
     }
 
     Object.defineProperty(NgElementumImpl.prototype, exposedMethod, {
-      value: async function (this: NgElementumImpl, ...args: any[]) {
-        const strategy = await this.ngElementumStrategy;
+      value: function (this: NgElementumImpl, ...args: any[]) {
+        if (!this.isConnected) {
+          throw new Error('Component is detached from DOM');
+        }
 
-        return strategy.applyMethod(exposedMethod, args);
+        if (!this.ngElementumCachedStrategy) {
+          throw new Error('Component is not initialized');
+        }
+
+        return this.ngElementumCachedStrategy.applyMethod(exposedMethod, args);
       },
     });
   }
@@ -315,4 +367,29 @@ export function createCustomElement<T, const C extends NgElementumConfig<T>>(
   });
 
   return NgElementumImpl as any;
+}
+
+function addZoneless(applicationConfig: ApplicationConfig): ApplicationConfig {
+  return mergeApplicationConfig(applicationConfig, {
+    providers: [provideZonelessChangeDetection()],
+  });
+}
+
+function getApplicationConfig(
+  configOrResolver: ApplicationConfig | (() => ApplicationConfig)
+): ApplicationConfig | undefined {
+  if (typeof configOrResolver === 'function') {
+    const platformRef = getPlatform();
+
+    if (platformRef) {
+      // TODO test config recreation
+      return addZoneless(
+        runInInjectionContext(platformRef.injector, configOrResolver)
+      );
+    }
+
+    return;
+  }
+
+  return addZoneless(configOrResolver);
 }

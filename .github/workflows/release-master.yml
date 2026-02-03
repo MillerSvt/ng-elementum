@@ -19,6 +19,9 @@ on:
           - major
           - minor
           - patch
+          - premajor
+          - preminor
+          - prepatch
 
 permissions:
   contents: write
@@ -56,8 +59,18 @@ jobs:
 
       - name: Nx release
         run: |
-          if [ "${{ github.event.inputs.releaseType }}" = "auto" ]; then
+          RELEASE_TYPE="${{ github.event.inputs.releaseType }}"
+
+          if [ "$RELEASE_TYPE" = "auto" ]; then
             npx nx release --yes
-          else
-            npx nx release ${{ github.event.inputs.releaseType }} --yes
+            exit 0
           fi
+
+          PREID_ARG=""
+          case "$RELEASE_TYPE" in
+            premajor|preminor|prepatch)
+              PREID_ARG="--preid=rc"
+              ;;
+          esac
+
+          npx nx release "$RELEASE_TYPE" $PREID_ARG --yes

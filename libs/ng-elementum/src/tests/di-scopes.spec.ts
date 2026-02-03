@@ -6,7 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { page } from '@vitest/browser/context';
-import { createCustomElement } from '../lib/create-custom-element';
+import { defineCustomElement } from './utils/define-custom-element';
 
 let platformIndex = 0;
 
@@ -37,7 +37,7 @@ class Test {
   protected readonly platformService = inject(PlatformService);
 }
 
-const NgElementum = createCustomElement(Test, {
+const [selector, NgElementum] = defineCustomElement(Test, {
   applicationConfig: {
     providers: [],
   },
@@ -45,11 +45,9 @@ const NgElementum = createCustomElement(Test, {
 
 type NgElementum = InstanceType<typeof NgElementum>;
 
-customElements.define('test-element', NgElementum);
-
 it('should create separate instances of root service for each web component', async () => {
-  const test1 = document.createElement('test-element') as NgElementum;
-  const test2 = document.createElement('test-element') as NgElementum;
+  const test1 = document.createElement(selector) as NgElementum;
+  const test2 = document.createElement(selector) as NgElementum;
 
   test1.setAttribute('data-testid', 'test-1');
   test2.setAttribute('data-testid', 'test-2');
@@ -70,8 +68,8 @@ it('should create separate instances of root service for each web component', as
 });
 
 it('should create one instance of platform service', async () => {
-  const test1 = document.createElement('test-element') as NgElementum;
-  const test2 = document.createElement('test-element') as NgElementum;
+  const test1 = document.createElement(selector) as NgElementum;
+  const test2 = document.createElement(selector) as NgElementum;
 
   test1.setAttribute('data-testid', 'test-1');
   test2.setAttribute('data-testid', 'test-2');

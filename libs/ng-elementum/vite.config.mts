@@ -1,8 +1,9 @@
-/// <reference types='vitest' />
+/// <reference types='vitest/config' />
 import { defineConfig } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+import { playwright } from '@vitest/browser-playwright';
 
 export default defineConfig(() => ({
   root: __dirname,
@@ -16,7 +17,6 @@ export default defineConfig(() => ({
     name: 'ng-elementum',
     watch: false,
     globals: true,
-    environment: 'jsdom',
     include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     setupFiles: ['src/test-setup.ts'],
     reporters: ['default'],
@@ -25,10 +25,9 @@ export default defineConfig(() => ({
       provider: 'v8' as const,
     },
     browser: {
-      name: 'chromium',
-      provider: 'playwright',
+      provider: playwright({}),
+      instances: [{ browser: 'chromium' as const }],
       enabled: true,
-      // headless: true,
     },
   },
 }));

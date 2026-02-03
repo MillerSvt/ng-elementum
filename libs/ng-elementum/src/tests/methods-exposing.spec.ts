@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { createCustomElement } from '../lib/create-custom-element';
+import { defineCustomElement } from './utils/define-custom-element';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function typingTest(fn: () => any): void {
@@ -31,7 +32,7 @@ typingTest(() =>
   })
 );
 
-const NgElementum = createCustomElement(Test, {
+const [selector, NgElementum] = defineCustomElement(Test, {
   applicationConfig: {
     providers: [],
   },
@@ -54,36 +55,34 @@ typingTest(() => {
 
 type NgElementum = InstanceType<typeof NgElementum>;
 
-customElements.define('test-element', NgElementum);
-
 it('should expose methods', async () => {
   expect(NgElementum.prototype.syncMethod).toBeTypeOf('function');
   expect(NgElementum.prototype.asyncMethod).toBeTypeOf('function');
 
-  const test = document.createElement('test-element') as NgElementum;
+  const test = document.createElement(selector) as NgElementum;
 
   test.setAttribute('data-testid', 'test');
 
-  await expect(test.syncMethod('test')).rejects.toEqual(
+  expect(() => test.syncMethod('test')).toThrow(
     new Error('Component is detached from DOM')
   );
-  await expect(test.asyncMethod('test')).rejects.toEqual(
+  expect(() => test.asyncMethod('test')).toThrow(
     new Error('Component is detached from DOM')
   );
 
   document.body.appendChild(test);
 
-  await expect(test.syncMethod('test')).resolves.toBe('test test');
+  expect(test.syncMethod('test')).toBe('test test');
   await expect(test.asyncMethod('test')).resolves.toBe('test test');
 
   test.remove();
 
   await Promise.resolve();
 
-  await expect(test.syncMethod('test')).rejects.toEqual(
+  expect(() => test.syncMethod('test')).toThrow(
     new Error('Component is detached from DOM')
   );
-  await expect(test.asyncMethod('test')).rejects.toEqual(
+  expect(() => test.asyncMethod('test')).toThrow(
     new Error('Component is detached from DOM')
   );
 });

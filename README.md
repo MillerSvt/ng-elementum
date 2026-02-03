@@ -51,8 +51,12 @@ The `createCustomElement()` function converts an Angular component into a class 
 element.
 
 ```typescript
-import { createCustomElement } from 'ng-elementum';
+import { createCustomElement, platformElementum } from 'ng-elementum';
 import { MyComponent } from './my.component';
+
+const platform = platformElementum([
+  // platform-level providers
+]);
 
 const MyElement = createCustomElement(MyComponent, {
   applicationConfig: { providers: [] },
@@ -66,6 +70,59 @@ Once registered, the element can be used like any other HTML tag:
 ```html
 <my-element message="Hello from ng-elementum!"></my-element>
 ```
+
+---
+
+## platformElementum
+
+`platformElementum()` is a dedicated helper for creating an Angular platform that is optimized for
+**Web Components and embeddable widgets** built with `ng-elementum`.
+
+It creates (or reuses) a single Angular **platform instance per page** and preconfigures it with
+everything required for a safe and predictable custom element lifecycle.
+
+In most cases, **`platformElementum()` should be used instead of `platformBrowser()`**
+when working with `ng-elementum`.
+
+### Basic usage
+
+```ts
+import { platformElementum } from 'ng-elementum';
+
+const platform = platformElementum([
+  // platform-level providers
+]);
+```
+
+### Why a dedicated platform helper?
+
+Angular platforms were originally designed for full-page applications.
+In the context of Web Components this leads to several issues:
+
+- Multiple widgets must share global services
+- Platform-level effects() not working
+- Platform-level resource() not working
+- When platform is destroyed, all elements are detached from DOM
+- When platform recreates, elements are not reattached to DOM
+
+`platformElementum()` solves these problems by:
+
+- Enabling platform-level effects/resource interop automatically
+- Acting as a stable DI root for all elements
+- Providing controlled platform lifecycle handling
+
+### Automatic element re-creation on platform restart
+
+One important feature of `platformElementum()` is that it allows
+custom elements created with `ng-elementum` to be safely recreated
+when the Angular platform is destroyed and created again.
+
+When the platform is destroyed and later recreated:
+
+- Existing custom elements do not permanently break
+- Custom elements are not detached from DOM
+- Internal Angular applications are recreated transparently
+- Consumers do not need to re-register custom elements manually
 
 ---
 
@@ -205,16 +262,17 @@ This element owns its router and URL state, does not conflict with any other Ang
 ## Using HttpClient in `platform` level
 
 By default, Angular does not allow `HttpClient` to be provided at the **platform** level.
-The `provideHttpClient()` API can only be used in the application root (via `bootstrapApplication`), not in `platformBrowser` `StaticProvider`s.
+The `provideHttpClient()` API can only be used in the application root (via `bootstrapApplication`), not in `platformElementum` `StaticProvider`s.
 
 To work around this limitation, `ng-elementum/http` exposes a helper function: `createHttpClient()`.
 It allows you to instantiate a standalone `HttpClient` and register it at the platform level:
 
 ```ts
+import { platformElementum } from 'ng-elementum';
 import { createHttpClient } from 'ng-elementum/http';
 import { HttpClient } from '@angular/common/http';
 
-const platform = platformBrowser([
+const platform = platformElementum([
   {
     provide: HttpClient,
     useFactory: () => createHttpClient(),
@@ -266,36 +324,6 @@ const MyElement = createCustomElement(MyComponent, {
 });
 
 customElements.define('my-element', MyElement);
-```
-
----
-
-## Platform Effects Interop
-
-`ng-elementum` introduces `providePlatformEffectInterop()` to allow running Angular effects at the **platform** level.
-
-Normally, Angular effects are scoped to an application instance. But you can use `providePlatformEffectInterop()` to
-run effects at the platform level:
-
-```typescript
-import { platformBrowser } from '@angular/platform-browser';
-import { providePlatformEffectInterop } from 'ng-elementum';
-import { Injectable } from '@angular/core';
-
-const platform = platformBrowser([providePlatformEffectInterop()]);
-
-@Injectable({
-  providedIn: `platform`,
-})
-class SomeService {
-  constructor() {
-    effect(() => {
-      console.log('Effect running at platform level');
-    });
-  }
-}
-
-platform.injector.get(SomeService);
 ```
 
 ---

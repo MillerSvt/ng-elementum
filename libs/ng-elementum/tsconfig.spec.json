@@ -9,7 +9,8 @@
       "node",
       "vitest",
       "@vitest/browser/context"
-    ]
+    ],
+    "lib": ["ESNext", "DOM"]
   },
   "include": [
     "vite.config.mts",

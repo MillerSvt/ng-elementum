@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { createCustomElement } from '../lib/create-custom-element';
 import { page } from '@vitest/browser/context';
+import { defineCustomElement } from './utils/define-custom-element';
 
 let componentIndex = 0;
 
@@ -11,7 +11,7 @@ class Test {
   protected readonly value = ++componentIndex;
 }
 
-const NgElementum = createCustomElement(Test, {
+const [selector, NgElementum] = defineCustomElement(Test, {
   applicationConfig: {
     providers: [],
   },
@@ -19,12 +19,10 @@ const NgElementum = createCustomElement(Test, {
 
 type NgElementum = InstanceType<typeof NgElementum>;
 
-customElements.define('test-element', NgElementum);
-
 it('should not recreate component when element is moved within the DOM', async () => {
   componentIndex = 0;
 
-  const test = document.createElement('test-element') as NgElementum;
+  const test = document.createElement(selector) as NgElementum;
 
   test.setAttribute('data-testid', 'test');
 
@@ -50,7 +48,7 @@ it('should not recreate component when element is moved within the DOM', async (
 it('should recreate component when element is attached to the DOM again', async () => {
   componentIndex = 0;
 
-  const test = document.createElement('test-element') as NgElementum;
+  const test = document.createElement(selector) as NgElementum;
 
   test.setAttribute('data-testid', 'test');
 
@@ -62,7 +60,7 @@ it('should recreate component when element is attached to the DOM again', async 
 
   test.remove();
 
-  await new Promise(requestAnimationFrame);
+  await Promise.resolve();
 
   document.body.appendChild(test);
 

@@ -1,13 +1,12 @@
-import { platformBrowser } from '@angular/platform-browser';
-import { providePlatformEffectInterop } from '../lib/provide-platform-effect-interop';
 import { effect, runInInjectionContext, signal } from '@angular/core';
 import { vi } from 'vitest';
 import { getTestBed } from '@angular/core/testing';
+import { platformElementum } from '../lib/platform';
 
 it('platform effects', async () => {
   getTestBed().platform.destroy();
 
-  const platform = platformBrowser([...providePlatformEffectInterop()]);
+  const platform = platformElementum();
 
   const source = signal(1);
   const onEffect = vi.fn();

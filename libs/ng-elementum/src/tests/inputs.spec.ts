@@ -1,7 +1,7 @@
 import { Component, input } from '@angular/core';
-import { createCustomElement } from '../lib/create-custom-element';
 import { page } from '@vitest/browser/context';
 import { JsonPipe } from '@angular/common';
+import { defineCustomElement } from './utils/define-custom-element';
 
 @Component({
   template: `
@@ -15,7 +15,7 @@ class Test {
   public readonly someObject = input<Record<string, string>>({});
 }
 
-const NgElementum = createCustomElement(Test, {
+const [selector, NgElementum] = defineCustomElement(Test, {
   applicationConfig: {
     providers: [],
   },
@@ -23,10 +23,8 @@ const NgElementum = createCustomElement(Test, {
 
 type NgElementum = InstanceType<typeof NgElementum>;
 
-customElements.define('test-element', NgElementum);
-
 it('should reflect element attributes', async () => {
-  const test = document.createElement('test-element') as NgElementum;
+  const test = document.createElement(selector) as NgElementum;
 
   test.setAttribute('data-testid', 'test');
 
@@ -54,17 +52,13 @@ it('should reflect element attributes', async () => {
 });
 
 it('should proxy properties', async () => {
-  const test = document.createElement('test-element') as NgElementum;
+  const test = document.createElement(selector) as NgElementum;
 
   test.setAttribute('data-testid', 'test');
 
   expect(test.someObject).toBe(null);
 
   document.body.appendChild(test);
-
-  expect(test.someObject).toBe(null);
-
-  await new Promise(requestAnimationFrame);
 
   expect(test.someObject).toEqual({});
 

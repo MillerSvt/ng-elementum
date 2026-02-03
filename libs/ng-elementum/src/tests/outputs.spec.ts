@@ -1,6 +1,6 @@
 import { Component, output } from '@angular/core';
-import { createCustomElement } from '../lib/create-custom-element';
 import { page } from '@vitest/browser/context';
+import { defineCustomElement } from './utils/define-custom-element';
 
 @Component({
   template: `<button
@@ -14,7 +14,7 @@ class Test {
   public readonly openSomePage = output<any>();
 }
 
-const NgElementum = createCustomElement(Test, {
+const [selector, NgElementum] = defineCustomElement(Test, {
   applicationConfig: {
     providers: [],
   },
@@ -22,10 +22,8 @@ const NgElementum = createCustomElement(Test, {
 
 type NgElementum = InstanceType<typeof NgElementum>;
 
-customElements.define('test-element', NgElementum);
-
 it('should expose methods', async () => {
-  const test = document.createElement('test-element') as NgElementum;
+  const test = document.createElement(selector) as NgElementum;
 
   test.setAttribute('data-testid', 'test');
 

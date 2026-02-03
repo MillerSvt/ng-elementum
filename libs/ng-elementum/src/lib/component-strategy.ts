@@ -16,32 +16,14 @@ import {
   ɵViewRef as ViewRef,
 } from '@angular/core';
 
-import {
-  NgElementumStrategy,
-  NgElementumStrategyFactory,
-} from './element-strategy';
 import { extractProjectableNodes } from './extract-projectable-nodes';
 import { camelToDashCase } from './utils';
-
-/**
- * Factory that creates new ComponentNgElementStrategy instance. Gets the component factory with the
- * constructor's injector's factory resolver and passes that factory to each strategy.
- */
-export class ComponentNgElementumStrategyFactory
-  implements NgElementumStrategyFactory
-{
-  constructor(private readonly component: Type<any>) {}
-
-  create(applicationRef: ApplicationRef) {
-    return new ComponentNgElementumStrategy(this.component, applicationRef);
-  }
-}
 
 /**
  * Creates and destroys a component ref using a component factory and handles change detection
  * in response to input changes.
  */
-export class ComponentNgElementumStrategy implements NgElementumStrategy {
+export class NgElementumStrategy {
   /** Reference to the component that was created on connect. */
   private componentRef: ComponentRef<any> | null = null;
 

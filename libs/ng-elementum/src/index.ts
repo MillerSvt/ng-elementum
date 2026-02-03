@@ -18,12 +18,5 @@ export {
   NgElementumConstructor,
   WithProperties,
 } from './lib/create-custom-element';
-export {
-  NgElementumStrategy,
-  NgElementStrategyEvent,
-  NgElementumStrategyFactory,
-} from './lib/element-strategy';
-export { providePlatformEffectInterop } from './lib/provide-platform-effect-interop';
-export { providePlatformResourceInterop } from './lib/provide-platform-resource-interop';
 
 // This file only reexports content of the `src` folder. Keep it that way.
