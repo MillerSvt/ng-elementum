@@ -22,6 +22,7 @@ on:
           - premajor
           - preminor
           - prepatch
+          - prerelease
 
 permissions:
   contents: write
@@ -68,7 +69,7 @@ jobs:
 
           PREID_ARG=""
           case "$RELEASE_TYPE" in
-            premajor|preminor|prepatch)
+            premajor|preminor|prepatch|prerelease)
               PREID_ARG="--preid=rc"
               ;;
           esac
