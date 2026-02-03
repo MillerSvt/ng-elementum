@@ -1,3 +1,13 @@
+## 1.0.0-rc.1 (2026-02-03)
+
+### 🩹 Fixes
+
+- **ng-elementum:** add exports ([5975ec9](https://github.com/MillerSvt/ng-elementum/commit/5975ec9))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 1.0.0-rc.0 (2026-02-03)
 
 This was a version bump only for ng-elementum to align it with other projects, there were no code changes.
