@@ -1,10 +1,4 @@
-import {
-  Component,
-  getPlatform,
-  inject,
-  Injectable,
-  signal,
-} from '@angular/core';
+import { Component, getPlatform, inject, Injectable, signal } from '@angular/core';
 import { page } from '@vitest/browser/context';
 import { defineCustomElement } from './utils/define-custom-element';
 
@@ -37,17 +31,15 @@ class Test {
   protected readonly platformService = inject(PlatformService);
 }
 
-const [selector, NgElementum] = defineCustomElement(Test, {
+const createElement = defineCustomElement(Test, {
   applicationConfig: {
     providers: [],
   },
 });
 
-type NgElementum = InstanceType<typeof NgElementum>;
-
 it('should create separate instances of root service for each web component', async () => {
-  const test1 = document.createElement(selector) as NgElementum;
-  const test2 = document.createElement(selector) as NgElementum;
+  using test1 = createElement();
+  using test2 = createElement();
 
   test1.setAttribute('data-testid', 'test-1');
   test2.setAttribute('data-testid', 'test-2');
@@ -62,14 +54,11 @@ it('should create separate instances of root service for each web component', as
   await expect
     .element(page.getByTestId('test-2').getByTestId('root'))
     .toHaveTextContent('root-2');
-
-  test1.remove();
-  test2.remove();
 });
 
 it('should create one instance of platform service', async () => {
-  const test1 = document.createElement(selector) as NgElementum;
-  const test2 = document.createElement(selector) as NgElementum;
+  using test1 = createElement();
+  using test2 = createElement();
 
   test1.setAttribute('data-testid', 'test-1');
   test2.setAttribute('data-testid', 'test-2');
@@ -94,7 +83,4 @@ it('should create one instance of platform service', async () => {
   await expect
     .element(page.getByTestId('test-2').getByTestId('platform'))
     .toHaveTextContent('platform-100');
-
-  test1.remove();
-  test2.remove();
 });

@@ -7,24 +7,26 @@ import { defineCustomElement } from './utils/define-custom-element';
   template: `
     <p data-testid="some-string">{{ someString() }}</p>
     <p data-testid="some-object">{{ someObject() | json }}</p>
+    <p data-testid="some-transform">{{ someTransform() }}</p>
   `,
   imports: [JsonPipe],
 })
 class Test {
   public readonly someString = input<string>('');
   public readonly someObject = input<Record<string, string>>({});
+  public readonly someTransform = input('', {
+    transform: (value: string) => value.toUpperCase(),
+  });
 }
 
-const [selector, NgElementum] = defineCustomElement(Test, {
+const createElement = defineCustomElement(Test, {
   applicationConfig: {
     providers: [],
   },
 });
 
-type NgElementum = InstanceType<typeof NgElementum>;
-
 it('should reflect element attributes', async () => {
-  const test = document.createElement(selector) as NgElementum;
+  using test = createElement();
 
   test.setAttribute('data-testid', 'test');
 
@@ -47,12 +49,10 @@ it('should reflect element attributes', async () => {
   await expect
     .element(page.getByTestId('test').getByTestId('some-string'))
     .toHaveTextContent('bar');
-
-  test.remove();
 });
 
 it('should proxy properties', async () => {
-  const test = document.createElement(selector) as NgElementum;
+  using test = createElement();
 
   test.setAttribute('data-testid', 'test');
 
@@ -73,6 +73,41 @@ it('should proxy properties', async () => {
   await expect
     .element(page.getByTestId('test').getByTestId('some-object'))
     .toHaveTextContent('{ "foo": "bar" }');
+});
 
-  test.remove();
+it('should transform value', async () => {
+  using test = createElement();
+
+  test.setAttribute('data-testid', 'test');
+
+  document.body.appendChild(test);
+
+  // We cannot receive the value from input because it has a transform function
+  expect(test.someTransform).toBe(null);
+
+  test.someTransform = 'foo';
+
+  await expect
+    .element(page.getByTestId('test').getByTestId('some-transform'))
+    .toHaveTextContent('FOO');
+
+  expect(test.someTransform).toBe('foo');
+});
+
+it('should apply inputs before attached', async () => {
+  using test = createElement();
+
+  test.setAttribute('data-testid', 'test');
+
+  expect(test.someTransform).toBe(null);
+
+  test.someTransform = 'foo';
+
+  expect(test.someTransform).toBe('foo');
+
+  document.body.appendChild(test);
+
+  await expect
+    .element(page.getByTestId('test').getByTestId('some-transform'))
+    .toHaveTextContent('FOO');
 });

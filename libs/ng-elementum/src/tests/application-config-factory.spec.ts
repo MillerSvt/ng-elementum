@@ -1,12 +1,4 @@
-import {
-  Component,
-  getPlatform,
-  inject,
-  Injectable,
-  InjectionToken,
-  signal,
-  Type,
-} from '@angular/core';
+import { Component, getPlatform, inject, Injectable, InjectionToken, signal, Type } from '@angular/core';
 import { page } from '@vitest/browser/context';
 import { NgComponentOutlet } from '@angular/common';
 import { defineCustomElement } from './utils/define-custom-element';
@@ -39,7 +31,7 @@ class Test {
 })
 class DynamicComponent {}
 
-const [selector, NgElementum] = defineCustomElement(Test, {
+const createElement = defineCustomElement(Test, {
   applicationConfig: (platformService = inject(PlatformService)) => ({
     providers: [
       platformService.isEnabled()
@@ -53,14 +45,12 @@ const [selector, NgElementum] = defineCustomElement(Test, {
   }),
 });
 
-type NgElementum = InstanceType<typeof NgElementum>;
-
 it('should create separate instances of root service for each web component', async () => {
   const platformService = getPlatform()!.injector.get(PlatformService);
 
   platformService.isEnabled.set(false);
 
-  const test1 = document.createElement(selector) as NgElementum;
+  using test1 = createElement();
 
   test1.setAttribute('data-testid', 'test-1');
 
@@ -78,7 +68,7 @@ it('should create separate instances of root service for each web component', as
 
   test1.remove();
 
-  const test2 = document.createElement(selector) as NgElementum;
+  using test2 = createElement();
 
   test2.setAttribute('data-testid', 'test-2');
 

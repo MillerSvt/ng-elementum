@@ -1,10 +1,4 @@
-import {
-  Component,
-  getPlatform,
-  inject,
-  InjectionToken,
-  ViewEncapsulation,
-} from '@angular/core';
+import { Component, getPlatform, inject, InjectionToken, ViewEncapsulation } from '@angular/core';
 import { page } from '@vitest/browser/context';
 import { platformElementum } from '../lib/platform';
 import { defineCustomElement } from './utils/define-custom-element';
@@ -21,7 +15,7 @@ class Test {
   protected readonly value = inject(appIndexToken);
 }
 
-const [selector, NgElementum] = defineCustomElement(Test, {
+const createElement = defineCustomElement(Test, {
   applicationConfig: {
     providers: [
       {
@@ -32,7 +26,6 @@ const [selector, NgElementum] = defineCustomElement(Test, {
   },
 });
 
-type NgElementum = InstanceType<typeof NgElementum>;
 
 it('should not detach component when platform is destroyed', async () => {
   getPlatform()?.destroy();
@@ -41,7 +34,7 @@ it('should not detach component when platform is destroyed', async () => {
 
   const platform = platformElementum();
 
-  const test = document.createElement(selector) as NgElementum;
+  using test = createElement();
 
   test.setAttribute('data-testid', 'test');
 
@@ -52,8 +45,6 @@ it('should not detach component when platform is destroyed', async () => {
   platform.destroy();
 
   await expect.element(page.getByTestId('test')).toBeInTheDocument();
-
-  test.remove();
 });
 
 it('should clear shadow dom when platform is destroyed', async () => {
@@ -63,7 +54,7 @@ it('should clear shadow dom when platform is destroyed', async () => {
 
   const platform = platformElementum();
 
-  const test = document.createElement(selector) as NgElementum;
+  using test = createElement();
 
   test.setAttribute('data-testid', 'test');
 
@@ -74,8 +65,6 @@ it('should clear shadow dom when platform is destroyed', async () => {
   platform.destroy();
 
   expect(page.getByTestId('test').element().shadowRoot?.innerHTML).toBe('');
-
-  test.remove();
 });
 
 it('should recreate component when platform recreated again', async () => {
@@ -85,7 +74,7 @@ it('should recreate component when platform recreated again', async () => {
 
   let platform = platformElementum();
 
-  const test = document.createElement(selector) as NgElementum;
+  using test = createElement();
 
   test.setAttribute('data-testid', 'test');
 
@@ -113,8 +102,6 @@ it('should recreate component when platform recreated again', async () => {
     .toHaveTextContent('3');
 
   platform.destroy();
-
-  test.remove();
 });
 
 it('should not recreate component when component is detached', async () => {
@@ -124,7 +111,7 @@ it('should not recreate component when component is detached', async () => {
 
   let platform = platformElementum();
 
-  const test = document.createElement(selector) as NgElementum;
+  using test = createElement();
 
   test.setAttribute('data-testid', 'test');
 
@@ -142,6 +129,4 @@ it('should not recreate component when component is detached', async () => {
   platform = platformElementum();
 
   expect(appIndex).toBe(1);
-
-  platform.destroy();
 });

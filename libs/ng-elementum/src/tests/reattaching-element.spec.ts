@@ -11,18 +11,17 @@ class Test {
   protected readonly value = ++componentIndex;
 }
 
-const [selector, NgElementum] = defineCustomElement(Test, {
+const createElement = defineCustomElement(Test, {
   applicationConfig: {
     providers: [],
   },
 });
 
-type NgElementum = InstanceType<typeof NgElementum>;
 
 it('should not recreate component when element is moved within the DOM', async () => {
   componentIndex = 0;
 
-  const test = document.createElement(selector) as NgElementum;
+  using test = createElement();
 
   test.setAttribute('data-testid', 'test');
 
@@ -41,14 +40,12 @@ it('should not recreate component when element is moved within the DOM', async (
   await expect
     .element(page.getByTestId('test').getByTestId('component-index'))
     .toHaveTextContent('1');
-
-  test.remove();
 });
 
 it('should recreate component when element is attached to the DOM again', async () => {
   componentIndex = 0;
 
-  const test = document.createElement(selector) as NgElementum;
+  using test = createElement();
 
   test.setAttribute('data-testid', 'test');
 
@@ -67,6 +64,4 @@ it('should recreate component when element is attached to the DOM again', async 
   await expect
     .element(page.getByTestId('test').getByTestId('component-index'))
     .toHaveTextContent('2');
-
-  test.remove();
 });

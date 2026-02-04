@@ -14,16 +14,15 @@ class Test {
   public readonly openSomePage = output<any>();
 }
 
-const [selector, NgElementum] = defineCustomElement(Test, {
+const createElement = defineCustomElement(Test, {
   applicationConfig: {
     providers: [],
   },
 });
 
-type NgElementum = InstanceType<typeof NgElementum>;
 
 it('should expose methods', async () => {
-  const test = document.createElement(selector) as NgElementum;
+  using test = createElement();
 
   test.setAttribute('data-testid', 'test');
 
@@ -43,6 +42,4 @@ it('should expose methods', async () => {
         detail: 123,
       })
     );
-
-  test.remove();
 });

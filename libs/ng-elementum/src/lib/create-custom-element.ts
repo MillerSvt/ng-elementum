@@ -9,9 +9,10 @@ import {
   runInInjectionContext,
   Signal,
   Type,
+  WritableSignal,
 } from '@angular/core';
 
-import { NgElementumStrategy } from './component-strategy';
+import { NgElementumStrategy, UNAVAILABLE } from './component-strategy';
 import { getDefaultAttributeToPropertyInputs } from './utils';
 import { offCreatePlatform, onCreatePlatform } from './platform';
 import { createApplicationSync } from './create-application-sync';
@@ -25,17 +26,18 @@ import { createApplicationSync } from './create-application-sync';
  *
  * @publicApi
  */
-export interface NgElementumConstructor<P> {
-  /**
-   * An array of observed attribute names for the custom element,
-   * derived by transforming input property names from the source component.
-   */
-  readonly observedAttributes: string[];
-
+export interface NgElementumConstructor<
+  T,
+  M extends keyof T,
+  S extends keyof T
+> {
   /**
    * Initializes a constructor instance.
    */
-  new (): NgElementum & WithProperties<P>;
+  new (): NgElementum &
+    ExposeInputs<T> &
+    ExposeSignals<T, S> &
+    ExposeMethods<T, M>;
 }
 
 /**
@@ -45,17 +47,18 @@ export interface NgElementumConstructor<P> {
  */
 export abstract class NgElementum extends HTMLElement {
   readonly #ngElementumInputsCache = new Map<string, any>();
+  readonly #ngElementumSignalsCache = new Map<string, any>();
   readonly #ngElementumComponentType: ComponentMirror<any>;
   readonly #ngElementumAttributeInputs: Record<string, [string, any]>;
   readonly #ngElementumOnCreatePlatformCallback = () =>
     this.connectedCallback();
   #ngElementumCachedStrategy: NgElementumStrategy | undefined;
   #ngElementumPreventRemove = false;
-  #ngElementumConfig: NgElementumConfig<any>;
+  #ngElementumConfig: NgElementumConfig<string, string>;
 
   constructor(
     componentType: ComponentMirror<any>,
-    config: NgElementumConfig<any>
+    config: NgElementumConfig<string, string>
   ) {
     super();
 
@@ -80,7 +83,7 @@ export abstract class NgElementum extends HTMLElement {
   ) {
     const [propName] = this.#ngElementumAttributeInputs[attrName];
 
-    this.setInputValue(propName, newValue);
+    this.ngElementumSetValue(propName, newValue);
   }
 
   /**
@@ -106,7 +109,11 @@ export abstract class NgElementum extends HTMLElement {
 
       const value = this.getAttribute(attrName)!;
 
-      strategy.setInputValue(propName, transform ? transform(value) : value);
+      strategy.setValue(propName, transform ? transform(value) : value);
+    }
+
+    for (const [key, value] of this.#ngElementumInputsCache) {
+      strategy.setValue(key, value);
     }
   }
 
@@ -125,35 +132,28 @@ export abstract class NgElementum extends HTMLElement {
     strategy.disconnect();
   }
 
-  getInputValue(propName: string): any {
-    if (
-      this.#ngElementumCachedStrategy &&
-      !this.#ngElementumInputsCache.has(propName)
-    ) {
-      this.#ngElementumInputsCache.set(
-        propName,
-        this.#ngElementumCachedStrategy.getInputValue(propName)
-      );
+  protected ngElementumGetValue(propName: string): any {
+    if (this.#ngElementumCachedStrategy) {
+      const value = this.#ngElementumCachedStrategy.getValue(propName);
+
+      if (value !== UNAVAILABLE) {
+        this.#ngElementumInputsCache.set(propName, value);
+      }
     }
 
     return this.#ngElementumInputsCache.get(propName) ?? null;
   }
 
-  setInputValue(propName: string, newValue: string): void {
+  protected ngElementumSetValue(propName: string, newValue: string): void {
     this.#ngElementumInputsCache.set(propName, newValue);
 
-    if (!this.#ngElementumCachedStrategy) {
-      return;
-    }
+    this.#ngElementumCachedStrategy?.setValue(propName, newValue);
+  }
 
-    const transform = this.#ngElementumComponentType.inputs.find(
-      (input) => input.propName === propName
-    )?.transform;
+  setSignalValue(propName: string, newValue: string): void {
+    this.#ngElementumSignalsCache.set(propName, newValue);
 
-    this.#ngElementumCachedStrategy.setInputValue(
-      propName,
-      transform ? transform(newValue) : newValue
-    );
+    this.#ngElementumCachedStrategy?.setValue(propName, newValue);
   }
 
   override remove(): void {
@@ -220,18 +220,7 @@ export abstract class NgElementum extends HTMLElement {
   }
 }
 
-/**
- * Additional type information that can be added to the NgElement class,
- * for properties that are added based
- * on the inputs and methods of the underlying component.
- *
- * @publicApi
- */
-export type WithProperties<P> = {
-  -readonly [property in keyof P]: P[property];
-};
-
-type ExtractPublicMethods<T> = {
+export type ExtractMethods<T> = {
   [K in keyof T]: K extends string
     ? T[K] extends (...args: any[]) => any
       ? T[K] extends Signal<any>
@@ -241,23 +230,44 @@ type ExtractPublicMethods<T> = {
     : never;
 }[keyof T];
 
-type GetExposedMethods<C extends NgElementumConfig<any>> =
-  C['exposedMethods'] extends (infer M extends string)[] ? M : never;
-
-export type ExposeMethods<T, C extends NgElementumConfig<T>> = {
-  [K in GetExposedMethods<C>]: K extends keyof T
-    ? T[K] extends (...args: infer A) => infer R
-      ? (...args: A) => R extends Promise<any> ? R : Promise<R>
+export type ExtractSignals<T> = {
+  [K in keyof T]: K extends string
+    ? T[K] extends Signal<any>
+      ? K
       : never
+    : never;
+}[keyof T];
+
+type UnwrapSignal<T> = T extends Signal<infer V> ? V | null : never;
+
+export type ExposeInputs<T> = {
+  -readonly [K in keyof T as T[K] extends InputSignal<any>
+    ? K
+    : never]: UnwrapSignal<T[K]>;
+};
+
+export type ExposeMethods<T, M extends keyof T> = {
+  [K in keyof T as M extends K ? K : never]: T[K] extends (
+    ...args: infer A
+  ) => infer R
+    ? (...args: A) => R extends Promise<any> ? R : Promise<R>
     : never;
 };
 
-type UnwrapInput<T> = T extends InputSignal<infer V> ? V | null : never;
-
-export type ExposeInputs<T> = {
-  [K in keyof T as T[K] extends InputSignal<any> ? K : never]: UnwrapInput<
-    T[K]
-  >;
+export type ExposeSignals<T, S extends keyof T> = {
+  readonly [K in keyof T as S extends K
+    ? T[K] extends Signal<any>
+      ? T[K] extends WritableSignal<any>
+        ? never
+        : K
+      : never
+    : never]: UnwrapSignal<T[K]>;
+} & {
+  -readonly [K in keyof T as S extends K
+    ? T[K] extends WritableSignal<any>
+      ? K
+      : never
+    : never]: UnwrapSignal<T[K]>;
 };
 
 /**
@@ -267,11 +277,15 @@ export type ExposeInputs<T> = {
  *
  * @publicApi
  */
-export type NgElementumConfig<T> = {
+export type NgElementumConfig<M extends string, S extends string> = {
   /**
    * An optional list of methods to expose on the custom element.
    */
-  exposedMethods?: ExtractPublicMethods<T>[];
+  exposedMethods?: M[];
+  /**
+   * An optional list of signals to expose on the custom element.
+   */
+  exposedSignals?: S[];
   /**
    * The config for application.
    *
@@ -302,10 +316,14 @@ export type NgElementumConfig<T> = {
  *
  * @publicApi
  */
-export function createCustomElement<T, const C extends NgElementumConfig<T>>(
+export function createCustomElement<
+  T,
+  const M extends ExtractMethods<T>,
+  const S extends ExtractSignals<T>
+>(
   component: Type<T>,
-  config: C
-): NgElementumConstructor<ExposeInputs<T> & ExposeMethods<T, C>> {
+  config: NgElementumConfig<M, S>
+): NgElementumConstructor<T, M, S> {
   const componentType = reflectComponentType(component);
 
   if (!componentType) {
@@ -352,16 +370,29 @@ export function createCustomElement<T, const C extends NgElementumConfig<T>>(
     });
   }
 
+  for (const exposedSignal of new Set(config.exposedSignals)) {
+    Object.defineProperty(NgElementumImpl.prototype, exposedSignal, {
+      get(this: NgElementumImpl) {
+        return this.ngElementumGetValue(exposedSignal);
+      },
+      set(this: NgElementumImpl, newValue: any) {
+        this.ngElementumSetValue(exposedSignal, newValue);
+      },
+      configurable: false,
+      enumerable: true,
+    });
+  }
+
   // Add getters and setters to the prototype for each property input.
   inputs.forEach(({ propName }) => {
     Object.defineProperty(NgElementumImpl.prototype, propName, {
       get(this: NgElementumImpl): any {
-        return this.getInputValue(propName);
+        return this.ngElementumGetValue(propName);
       },
       set(this: NgElementumImpl, newValue: any): void {
-        this.setInputValue(propName, newValue);
+        this.ngElementumSetValue(propName, newValue);
       },
-      configurable: true,
+      configurable: false,
       enumerable: true,
     });
   });

@@ -15,7 +15,8 @@
   "include": [
     "vite.config.mts",
     "**/*.spec.ts",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "**/tests/**/*.ts"
   ],
   "files": ["src/test-setup.ts"]
 }

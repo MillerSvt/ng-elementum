@@ -17,7 +17,13 @@ import {
 } from '@angular/core';
 
 import { extractProjectableNodes } from './extract-projectable-nodes';
-import { camelToDashCase } from './utils';
+import {
+  camelToDashCase,
+  isInputWithTransform,
+  isWritableSignal,
+} from './utils';
+
+export const UNAVAILABLE = Symbol('UNAVAILABLE');
 
 /**
  * Creates and destroys a component ref using a component factory and handles change detection
@@ -109,31 +115,43 @@ export class NgElementumStrategy {
    * Returns the component property value. If the component has not yet been created, the value is
    * retrieved from the cached initialization values.
    */
-  getInputValue(property: string): any {
-    if (this.componentRef === null) {
-      return this.initialInputValues.get(property);
-    }
+  getValue(property: string): any {
+    const value = this.componentRef?.instance[property];
 
-    const value = this.componentRef.instance[property];
+    if (isInputWithTransform(value)) {
+      // We cannot read the value of an input with a transform function,
+      // because it's type can be different from the type of the property.
+      return UNAVAILABLE;
+    }
 
     if (isSignal(value)) {
       return value();
     }
 
-    return value;
+    return UNAVAILABLE;
   }
 
   /**
    * Sets the input value for the property. If the component has not yet been created, the value is
    * cached and set when the component is created.
    */
-  setInputValue(property: string, value: any): void {
+  setValue(property: string, value: any): void {
     if (this.componentRef === null) {
-      this.initialInputValues.set(property, value);
       return;
     }
 
-    this.componentRef!.setInput(this.inputMap.get(property) ?? property, value);
+    if (
+      this.componentMirror.inputs.some((input) => input.propName === property)
+    ) {
+      this.componentRef.setInput(
+        this.inputMap.get(property) ?? property,
+        value
+      );
+    } else if (isWritableSignal(this.componentRef.instance[property])) {
+      this.componentRef.instance[property].set(value);
+    } else {
+      return;
+    }
 
     // `setInput` won't mark the view dirty if the input didn't change from its previous value.
     if (isViewDirty(this.componentRef!.hostView as ViewRef<unknown>)) {
@@ -173,7 +191,6 @@ export class NgElementumStrategy {
       hostElement: element,
     }));
 
-    this.initializeInputs();
     this.initializeOutputs(element, componentRef);
 
     this.appRef.attachView(componentRef.hostView);
@@ -185,15 +202,6 @@ export class NgElementumStrategy {
     const listeners = this.appRef.injector.get(APP_BOOTSTRAP_LISTENER, []);
 
     listeners.forEach((listener) => listener(componentRef));
-  }
-
-  /** Set any stored initial inputs on the component's properties. */
-  protected initializeInputs(): void {
-    for (const [propName, value] of this.initialInputValues) {
-      this.setInputValue(propName, value);
-    }
-
-    this.initialInputValues.clear();
   }
 
   /** Sets up listeners for the component's outputs so that the events stream emits the events. */

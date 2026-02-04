@@ -1,4 +1,11 @@
-import { ComponentMirror } from '@angular/core';
+import {
+  ComponentMirror,
+  isSignal,
+  WritableSignal,
+  InputSignal,
+  InputSignalWithTransform,
+} from '@angular/core';
+import { SIGNAL } from '@angular/core/primitives/signals';
 
 /**
  * Convert a camelCased string to kebab-cased.
@@ -43,4 +50,22 @@ export function getDefaultAttributeToPropertyInputs(
   });
 
   return attributeToPropertyInputs;
+}
+
+export function isWritableSignal(
+  value: unknown
+): value is WritableSignal<unknown> {
+  return isSignal(value) && 'set' in value;
+}
+
+export function isInputWithTransform(
+  value: unknown
+): value is InputSignalWithTransform<unknown, unknown> {
+  return (
+    isSignal(value) &&
+    !!value[SIGNAL] &&
+    typeof value[SIGNAL] === 'object' &&
+    'transformFn' in value[SIGNAL] &&
+    value[SIGNAL].transformFn !== undefined
+  );
 }

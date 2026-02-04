@@ -16,7 +16,6 @@ export {
   NgElementum,
   NgElementumConfig,
   NgElementumConstructor,
-  WithProperties,
 } from './lib/create-custom-element';
 export { platformElementum } from './lib/platform';
 export { createApplicationSync } from './lib/create-application-sync';

@@ -1,24 +1,35 @@
 import { Type } from '@angular/core';
 import {
   createCustomElement,
-  ExposeInputs,
-  ExposeMethods,
+  ExtractMethods,
+  ExtractSignals,
   NgElementumConfig,
   NgElementumConstructor,
 } from '../../lib/create-custom-element';
 
-export function defineCustomElement<T, const C extends NgElementumConfig<T>>(
+export function defineCustomElement<
+  T,
+  const M extends ExtractMethods<T>,
+  const S extends ExtractSignals<T>
+>(
   component: Type<T>,
-  config: C
-): readonly [
-  string,
-  NgElementumConstructor<ExposeInputs<T> & ExposeMethods<T, C>>
-] {
+  config: NgElementumConfig<M, S>
+): () => InstanceType<NgElementumConstructor<T, M, S>> & Disposable {
   const ElementCtor = createCustomElement(component, config);
 
   const selector = `test-${crypto.randomUUID()}`;
 
   customElements.define(selector, ElementCtor);
 
-  return [selector, ElementCtor] as const;
+  return () =>
+    Object.assign(
+      document.createElement(selector) as InstanceType<
+        NgElementumConstructor<T, M, S>
+      >,
+      {
+        [Symbol.dispose](this: HTMLElement) {
+          this.remove();
+        },
+      }
+    );
 }

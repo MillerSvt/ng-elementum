@@ -32,7 +32,7 @@ typingTest(() =>
   })
 );
 
-const [selector, NgElementum] = defineCustomElement(Test, {
+const createElement = defineCustomElement(Test, {
   applicationConfig: {
     providers: [],
   },
@@ -40,7 +40,7 @@ const [selector, NgElementum] = defineCustomElement(Test, {
 });
 
 typingTest(() => {
-  const element = new NgElementum();
+  const element = createElement();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const syncMethodResult: Promise<string> = element.syncMethod('test');
@@ -53,13 +53,9 @@ typingTest(() => {
   element.syncMethod('test', 123);
 });
 
-type NgElementum = InstanceType<typeof NgElementum>;
 
 it('should expose methods', async () => {
-  expect(NgElementum.prototype.syncMethod).toBeTypeOf('function');
-  expect(NgElementum.prototype.asyncMethod).toBeTypeOf('function');
-
-  const test = document.createElement(selector) as NgElementum;
+  using test = createElement();
 
   test.setAttribute('data-testid', 'test');
 
