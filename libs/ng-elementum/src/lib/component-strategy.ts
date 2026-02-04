@@ -25,6 +25,10 @@ import {
 
 export const UNAVAILABLE = Symbol('UNAVAILABLE');
 
+function pick<T>(value: T): T {
+  return value;
+}
+
 /**
  * Creates and destroys a component ref using a component factory and handles change detection
  * in response to input changes.
@@ -163,7 +167,7 @@ export class NgElementumStrategy {
 
       // Notifying the scheduler with `NotificationSource.CustomElement` causes a `tick()` to be
       // scheduled unconditionally, even if the scheduler is otherwise disabled.
-      this.cdScheduler.notify(NotificationSource.CustomElement);
+      this.cdScheduler.notify(pick<NotificationSource.CustomElement>(6));
     }
   }
 

@@ -36,7 +36,7 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
-    "@nx/vite:test": {
+    "@nx/vitest:test": {
       "cache": true,
       "inputs": ["default", "^production"]
     }
@@ -71,7 +71,6 @@
     }
   },
   "release": {
-    "releaseTagPattern": "release/{projectName}/{version}",
     "projectsRelationship": "independent",
     "version": {
       "preVersionCommand": "npx nx run-many -t build",
@@ -82,6 +81,9 @@
       "projectChangelogs": {
         "createRelease": "github"
       }
+    },
+    "releaseTag": {
+      "pattern": "release/{projectName}/{version}"
     }
   }
 }

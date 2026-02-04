@@ -17,15 +17,14 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "options": {
-        "project": "libs/ng-elementum/ng-package.json"
+        "project": "libs/ng-elementum/ng-package.json",
+        "tsConfig": "libs/ng-elementum/tsconfig.lib.json"
       },
       "configurations": {
         "production": {
           "tsConfig": "libs/ng-elementum/tsconfig.lib.prod.json"
         },
-        "development": {
-          "tsConfig": "libs/ng-elementum/tsconfig.lib.json"
-        }
+        "development": {}
       },
       "defaultConfiguration": "production"
     },
@@ -35,7 +34,7 @@
       }
     },
     "test": {
-      "executor": "@nx/vite:test",
+      "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
         "reportsDirectory": "../../coverage/libs/test"
