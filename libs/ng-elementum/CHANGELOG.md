@@ -1,3 +1,13 @@
+## 1.0.0-rc.2 (2026-02-05)
+
+### 🩹 Fixes
+
+- tests and ci ([74b94a6](https://github.com/MillerSvt/ng-elementum/commit/74b94a6))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 1.0.0-rc.1 (2026-02-03)
 
 ### 🩹 Fixes
