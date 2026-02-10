@@ -18,6 +18,8 @@ export {
   NgElementumConstructor,
 } from './lib/create-custom-element';
 export { platformElementum } from './lib/platform';
-export { createApplicationSync } from './lib/create-application-sync';
+export { createApplicationSync as ɵcreateApplicationSync } from './lib/create-application-sync';
+export { providePlatformEffectInterop as ɵprovidePlatformEffectInterop } from './lib/provide-platform-effect-interop';
+export { providePlatformResourceInterop as ɵprovidePlatformResourceInterop } from './lib/provide-platform-resource-interop';
 
 // This file only reexports content of the `src` folder. Keep it that way.
