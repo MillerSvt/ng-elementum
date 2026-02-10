@@ -1,3 +1,13 @@
+## 1.0.0-rc.3 (2026-02-10)
+
+### 🩹 Fixes
+
+- **ng-elementum:** export internals ([2ab6c83](https://github.com/MillerSvt/ng-elementum/commit/2ab6c83))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 1.0.0-rc.2 (2026-02-05)
 
 ### 🩹 Fixes
