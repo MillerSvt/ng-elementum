@@ -1,6 +1,7 @@
 import {
   ApplicationConfig,
   ComponentMirror,
+  ElementRef,
   getPlatform,
   InputSignal,
   mergeApplicationConfig,
@@ -174,6 +175,7 @@ export abstract class NgElementum extends HTMLElement {
 
   #ngElementumCreateStrategy(): NgElementumStrategy | undefined {
     const applicationConfig = getApplicationConfig(
+      this,
       this.#ngElementumConfig.applicationConfig
     );
 
@@ -400,13 +402,23 @@ export function createCustomElement<
   return NgElementumImpl as any;
 }
 
-function addZoneless(applicationConfig: ApplicationConfig): ApplicationConfig {
+function addRequiredProviders(
+  element: HTMLElement,
+  applicationConfig: ApplicationConfig
+): ApplicationConfig {
   return mergeApplicationConfig(applicationConfig, {
-    providers: [provideZonelessChangeDetection()],
+    providers: [
+      provideZonelessChangeDetection(),
+      {
+        provide: ElementRef,
+        useValue: new ElementRef(element),
+      },
+    ],
   });
 }
 
 function getApplicationConfig(
+  element: HTMLElement,
   configOrResolver: ApplicationConfig | (() => ApplicationConfig)
 ): ApplicationConfig | undefined {
   if (typeof configOrResolver === 'function') {
@@ -414,7 +426,8 @@ function getApplicationConfig(
 
     if (platformRef) {
       // TODO test config recreation
-      return addZoneless(
+      return addRequiredProviders(
+        element,
         runInInjectionContext(platformRef.injector, configOrResolver)
       );
     }
@@ -422,5 +435,5 @@ function getApplicationConfig(
     return;
   }
 
-  return addZoneless(configOrResolver);
+  return addRequiredProviders(element, configOrResolver);
 }
