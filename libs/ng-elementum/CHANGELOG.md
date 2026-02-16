@@ -1,3 +1,13 @@
+## 1.0.0-rc.4 (2026-02-16)
+
+### 🚀 Features
+
+- **ng-elementum:** provide current element as ElementRef to application ([c71294f](https://github.com/MillerSvt/ng-elementum/commit/c71294f))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 1.0.0-rc.3 (2026-02-10)
 
 ### 🩹 Fixes
