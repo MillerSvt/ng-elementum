@@ -1,3 +1,13 @@
+## 1.0.0-rc.5 (2026-02-17)
+
+### 🩹 Fixes
+
+- **ng-elementum:** destroy DestroyRef after destroying platform ([e606da0](https://github.com/MillerSvt/ng-elementum/commit/e606da0))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 1.0.0-rc.4 (2026-02-16)
 
 ### 🚀 Features
