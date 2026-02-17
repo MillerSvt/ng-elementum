@@ -1,4 +1,4 @@
-import { Component, getPlatform, inject, InjectionToken, ViewEncapsulation } from '@angular/core';
+import { Component, DestroyRef, getPlatform, inject, InjectionToken, ViewEncapsulation } from '@angular/core';
 import { page } from '@vitest/browser/context';
 import { platformElementum } from '../lib/platform';
 import { defineCustomElement } from './utils/define-custom-element';
@@ -129,4 +129,25 @@ it('should not recreate component when component is detached', async () => {
   platform = platformElementum();
 
   expect(appIndex).toBe(1);
+});
+
+it('should invoke DestroyRef callbacks', async () => {
+  getPlatform()?.destroy();
+
+  const platform = platformElementum();
+  const destroyRef = platform.injector.get(DestroyRef);
+
+  const destroyCallback = vi.fn();
+  const revokedDestroyCallback = vi.fn();
+
+  destroyRef.onDestroy(destroyCallback);
+  destroyRef.onDestroy(revokedDestroyCallback)();
+
+  platform.destroy();
+
+  await Promise.resolve();
+
+  expect(destroyCallback).toHaveBeenCalled();
+  expect(revokedDestroyCallback).not.toHaveBeenCalled();
+  expect(destroyRef.destroyed).toBe(true);
 });

@@ -1,6 +1,6 @@
 import {
   createPlatformFactory,
-  getPlatform,
+  DestroyRef,
   inject,
   PlatformRef,
   providePlatformInitializer,
@@ -26,6 +26,19 @@ export const platformElementum = createPlatformFactory(
     // @ts-expect-error Angular typing issue
     providePlatformInitializer(() => {
       onCreatePlatformListeners.forEach((cb) => cb());
+
+      // TODO remove after resolving issue https://github.com/angular/angular/issues/67095
+      const platform = inject(PlatformRef);
+      const destroyRef = inject(DestroyRef);
+
+      platform.onDestroy(() => {
+        queueMicrotask(() => {
+          if (!destroyRef.destroyed) {
+            // @ts-expect-error typing issue
+            destroyRef.destroy();
+          }
+        });
+      });
     }),
     providePlatformEffectInterop(),
     providePlatformResourceInterop(),
