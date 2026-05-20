@@ -14,6 +14,7 @@ import {
 import {
   assertInInjectionContext,
   createEnvironmentInjector,
+  DestroyRef,
   inject,
   Injectable,
   Injector,
@@ -85,6 +86,11 @@ export function createHttpClient(
     ],
     inject(Injector) as any
   );
+
+  // TODO Angular bug https://github.com/angular/angular/issues/68818
+  inject(DestroyRef).onDestroy(() => {
+    injector.destroy();
+  });
 
   return injector.get(HttpClient);
 }
