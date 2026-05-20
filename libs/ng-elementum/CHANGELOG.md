@@ -1,3 +1,28 @@
+# 1.0.0 (2026-05-20)
+
+### 🚀 Features
+
+- **ng-elementum:** provide current element as ElementRef to application ([c71294f](https://github.com/MillerSvt/ng-elementum/commit/c71294f))
+- ⚠️  **ng-elementum:** add ability to expose signals ([35b1e52](https://github.com/MillerSvt/ng-elementum/commit/35b1e52))
+- ⚠️  **ng-elementum:** recreate component after platform recreation ([1539e06](https://github.com/MillerSvt/ng-elementum/commit/1539e06))
+
+### 🩹 Fixes
+
+- **ng-elementum:** destroy child injector when DestroyRef is destroyed ([80a09bc](https://github.com/MillerSvt/ng-elementum/commit/80a09bc))
+- **ng-elementum:** destroy DestroyRef after destroying platform ([e606da0](https://github.com/MillerSvt/ng-elementum/commit/e606da0))
+- **ng-elementum:** export internals ([2ab6c83](https://github.com/MillerSvt/ng-elementum/commit/2ab6c83))
+- tests and ci ([457aa08](https://github.com/MillerSvt/ng-elementum/commit/457aa08))
+- **ng-elementum:** add exports ([d66047b](https://github.com/MillerSvt/ng-elementum/commit/d66047b))
+
+### ⚠️  Breaking Changes
+
+- **ng-elementum:** add ability to expose signals  ([35b1e52](https://github.com/MillerSvt/ng-elementum/commit/35b1e52))
+- **ng-elementum:** recreate component after platform recreation  ([1539e06](https://github.com/MillerSvt/ng-elementum/commit/1539e06))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 1.0.0-rc.5 (2026-02-17)
 
 ### 🩹 Fixes
