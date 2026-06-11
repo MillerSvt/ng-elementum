@@ -1,3 +1,13 @@
+## 1.0.1 (2026-06-11)
+
+### 🩹 Fixes
+
+- **ng-elementum:** pass effects errors to platform ErrorHandler if exists ([119dec2](https://github.com/MillerSvt/ng-elementum/commit/119dec2))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 # 1.0.0 (2026-05-20)
 
 ### 🚀 Features
