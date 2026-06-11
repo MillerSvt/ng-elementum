@@ -1,4 +1,5 @@
 import {
+  ErrorHandler,
   inject,
   Injectable,
   StaticProvider,
@@ -15,6 +16,7 @@ type SchedulableEffect = {
 class PlatformEffectScheduler extends ɵEffectScheduler {
   private dirtyEffectCount = 0;
   private readonly queue = new Set<SchedulableEffect>();
+  private readonly errorHandler = inject(ErrorHandler, { optional: true });
 
   public add(handle: SchedulableEffect): void {
     this.enqueue(handle);
@@ -60,7 +62,15 @@ class PlatformEffectScheduler extends ɵEffectScheduler {
       this.dirtyEffectCount--;
       ranOneEffect = true;
 
-      handle.run();
+      try {
+        handle.run();
+      } catch (error) {
+        if (!this.errorHandler) {
+          throw error;
+        }
+
+        this.errorHandler.handleError(error);
+      }
     }
 
     return ranOneEffect;
