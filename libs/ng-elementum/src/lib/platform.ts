@@ -23,7 +23,6 @@ export const platformElementum = createPlatformFactory(
   platformBrowser,
   'ng-elementum',
   [
-    // @ts-expect-error Angular typing issue
     providePlatformInitializer(() => {
       onCreatePlatformListeners.forEach((cb) => cb());
 
