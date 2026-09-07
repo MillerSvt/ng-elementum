@@ -1,5 +1,5 @@
 import { Component, output } from '@angular/core';
-import { page } from '@vitest/browser/context';
+import { page } from 'vitest/browser';
 import { defineCustomElement } from './utils/define-custom-element';
 
 @Component({

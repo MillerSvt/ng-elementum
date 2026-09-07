@@ -2,12 +2,11 @@ import {
   HttpFeature,
   HttpFeatureKind,
   withNoXsrfProtection,
+  ɵHTTP_FETCH_MAX_RESPONSE_SIZE,
 } from '@angular/common/http';
-import { XhrFactory } from '@angular/common';
 import {
   HttpClient,
   HttpHandler,
-  HttpXhrBackend,
   provideHttpClient,
   ɵHttpInterceptingHandler,
   ɵREQUESTS_CONTRIBUTE_TO_STABILITY,
@@ -17,19 +16,11 @@ import {
   createEnvironmentInjector,
   DestroyRef,
   inject,
-  Injectable,
   Injector,
   NgZone,
   PendingTasks,
 } from '@angular/core';
 import { ɵINJECTOR_SCOPE } from '@angular/core';
-
-@Injectable()
-export class BrowserXhr implements XhrFactory {
-  build(): XMLHttpRequest {
-    return new XMLHttpRequest();
-  }
-}
 
 class NoopPendingTasks implements Pick<PendingTasks, keyof PendingTasks> {
   add(): () => void {
@@ -47,15 +38,11 @@ const platformProviders = [
     useExisting: ɵHttpInterceptingHandler,
   },
   {
-    // In Angular 21 `HttpXhrBackend` is `providedIn: 'root'`, so it is not
-    // reachable from a platform-scoped environment injector. Provide it
-    // locally so the default XHR backend resolves in platform scope.
-    provide: HttpXhrBackend,
-    useClass: HttpXhrBackend,
-  },
-  {
-    provide: XhrFactory,
-    useClass: BrowserXhr,
+    // Angular 22 `FetchBackend` injects `HTTP_FETCH_MAX_RESPONSE_SIZE`, which is
+    // not reachable from a platform-scoped environment injector. Provide it
+    // explicitly with its default: no limit in the browser.
+    provide: ɵHTTP_FETCH_MAX_RESPONSE_SIZE,
+    useValue: null,
   },
   {
     provide: PendingTasks,

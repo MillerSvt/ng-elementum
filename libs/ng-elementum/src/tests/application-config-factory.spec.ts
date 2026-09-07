@@ -1,5 +1,5 @@
 import { Component, getPlatform, inject, Injectable, InjectionToken, signal, Type } from '@angular/core';
-import { page } from '@vitest/browser/context';
+import { page } from 'vitest/browser';
 import { NgComponentOutlet } from '@angular/common';
 import { defineCustomElement } from './utils/define-custom-element';
 

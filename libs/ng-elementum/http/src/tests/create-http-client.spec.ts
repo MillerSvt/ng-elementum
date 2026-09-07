@@ -3,7 +3,7 @@ import { createHttpClient } from '../lib/create-http-client';
 import { TestBed } from '@angular/core/testing';
 import { HttpClient, withFetch } from '@angular/common/http';
 
-it('createHttpClient with xhr in platform', () => {
+it('createHttpClient with default fetch in platform', () => {
   const httpClientToken = new InjectionToken('httpClientToken', {
     providedIn: 'platform',
     factory: () => createHttpClient(),
@@ -12,7 +12,7 @@ it('createHttpClient with xhr in platform', () => {
   expect(TestBed.inject(httpClientToken)).toBeInstanceOf(HttpClient);
 });
 
-it('createHttpClient with xhr in root', () => {
+it('createHttpClient with default fetch in root', () => {
   const httpClientToken = new InjectionToken('httpClientToken', {
     providedIn: 'root',
     factory: () => createHttpClient(),

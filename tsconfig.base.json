@@ -18,7 +18,12 @@
       "ng-elementum": ["libs/ng-elementum/src/index.ts"],
       "ng-elementum/http": ["libs/ng-elementum/http/src/index.ts"],
       "ng-elementum/router": ["libs/ng-elementum/router/src/index.ts"]
-    }
+    },
+    "strict": false,
+    "noUncheckedSideEffectImports": false,
+    "types": ["*"],
+    "esModuleInterop": false,
+    "ignoreDeprecations": "6.0"
   },
   "exclude": ["node_modules", "tmp"]
 }

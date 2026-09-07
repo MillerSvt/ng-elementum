@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { page } from '@vitest/browser/context';
+import { page } from 'vitest/browser';
 import { JsonPipe } from '@angular/common';
 import { defineCustomElement } from './utils/define-custom-element';
 

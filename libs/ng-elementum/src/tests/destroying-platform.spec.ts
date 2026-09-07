@@ -1,5 +1,5 @@
 import { Component, DestroyRef, getPlatform, inject, InjectionToken, ViewEncapsulation } from '@angular/core';
-import { page } from '@vitest/browser/context';
+import { page } from 'vitest/browser';
 import { platformElementum } from '../lib/platform';
 import { defineCustomElement } from './utils/define-custom-element';
 
