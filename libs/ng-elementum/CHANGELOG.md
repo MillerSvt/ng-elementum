@@ -1,3 +1,23 @@
+# 2.0.0 (2026-09-07)
+
+### 🚀 Features
+
+- ⚠️  **ng-elementum:** upgrade to Angular 21 ([7c0cd1f](https://github.com/MillerSvt/ng-elementum/commit/7c0cd1f))
+
+### 🩹 Fixes
+
+- **ng-elementum:** remove unused @ts-expect-error on Angular 21 ([ee6517c](https://github.com/MillerSvt/ng-elementum/commit/ee6517c))
+
+### ⚠️  Breaking Changes
+
+- **ng-elementum:** upgrade to Angular 21  ([7c0cd1f](https://github.com/MillerSvt/ng-elementum/commit/7c0cd1f))
+  peerDependencies now target Angular 21
+
+### ❤️ Thank You
+
+- s.v.zaytsev
+- Svyatoslav Zaytsev
+
 ## 1.0.1 (2026-06-11)
 
 ### 🩹 Fixes
