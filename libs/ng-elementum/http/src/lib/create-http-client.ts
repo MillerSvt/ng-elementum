@@ -7,8 +7,9 @@ import { XhrFactory } from '@angular/common';
 import {
   HttpClient,
   HttpHandler,
+  HttpXhrBackend,
   provideHttpClient,
-  ɵHttpInterceptorHandler,
+  ɵHttpInterceptingHandler,
   ɵREQUESTS_CONTRIBUTE_TO_STABILITY,
 } from '@angular/common/http';
 import {
@@ -40,10 +41,17 @@ class NoopPendingTasks implements Pick<PendingTasks, keyof PendingTasks> {
 }
 
 const platformProviders = [
-  ɵHttpInterceptorHandler,
+  ɵHttpInterceptingHandler,
   {
     provide: HttpHandler,
-    useExisting: ɵHttpInterceptorHandler,
+    useExisting: ɵHttpInterceptingHandler,
+  },
+  {
+    // In Angular 21 `HttpXhrBackend` is `providedIn: 'root'`, so it is not
+    // reachable from a platform-scoped environment injector. Provide it
+    // locally so the default XHR backend resolves in platform scope.
+    provide: HttpXhrBackend,
+    useClass: HttpXhrBackend,
   },
   {
     provide: XhrFactory,

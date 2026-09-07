@@ -2,9 +2,14 @@ import {
   ApplicationConfig,
   ApplicationInitStatus,
   ApplicationRef,
-  mergeApplicationConfig,
+  importProvidersFrom,
+  PLATFORM_ID,
+  PLATFORM_INITIALIZER,
+  ɵinternalCreateApplication,
+  ɵsetDocument,
 } from '@angular/core';
-import { createApplication } from '@angular/platform-browser';
+import { BrowserModule, ɵBrowserDomAdapter } from '@angular/platform-browser';
+import { DOCUMENT, ɵPLATFORM_BROWSER_ID } from '@angular/common';
 
 type Resolve<T> = (value: T | SyncPromise<T> | PromiseLike<T>) => void;
 type Reject = (reason?: any) => void;
@@ -218,22 +223,41 @@ export class SyncPromise<T = unknown> implements Promise<T> {
   }
 }
 
+const platformProviders = [
+  { provide: PLATFORM_ID, useValue: ɵPLATFORM_BROWSER_ID },
+  {
+    provide: PLATFORM_INITIALIZER,
+    useValue: () => ɵBrowserDomAdapter.makeCurrent(),
+    multi: true,
+  },
+  {
+    provide: DOCUMENT,
+    useFactory: () => {
+      ɵsetDocument(document);
+      return document;
+    },
+  },
+];
+
 export function createApplicationSync(
   applicationConfig: ApplicationConfig
 ): ApplicationRef {
   let appRef: ApplicationRef | undefined;
 
-  applicationConfig = mergeApplicationConfig(applicationConfig, {
-    providers: [
-      {
-        provide: ApplicationInitStatus,
-        useFactory: () =>
-          SyncPromise.runWithSyncPromise(() => new ApplicationInitStatus()),
-      },
-    ],
-  });
+  const appProviders = [
+    importProvidersFrom(BrowserModule),
+    ...(applicationConfig.providers ?? []),
+    {
+      provide: ApplicationInitStatus,
+      useFactory: () =>
+        SyncPromise.runWithSyncPromise(() => new ApplicationInitStatus()),
+    },
+  ];
 
-  createApplication(applicationConfig).then((ref) => {
+  ɵinternalCreateApplication({
+    appProviders,
+    platformProviders,
+  } as any).then((ref) => {
     appRef = ref;
   });
 
