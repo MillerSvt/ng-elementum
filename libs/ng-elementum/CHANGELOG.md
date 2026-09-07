@@ -1,3 +1,18 @@
+# 3.0.0 (2026-09-07)
+
+### 🚀 Features
+
+- ⚠️  **ng-elementum:** upgrade to Angular 22 ([c14caa4](https://github.com/MillerSvt/ng-elementum/commit/c14caa4))
+
+### ⚠️  Breaking Changes
+
+- **ng-elementum:** upgrade to Angular 22  ([c14caa4](https://github.com/MillerSvt/ng-elementum/commit/c14caa4))
+  peerDependencies now target Angular 22
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 # 2.0.0 (2026-09-07)
 
 ### 🚀 Features
