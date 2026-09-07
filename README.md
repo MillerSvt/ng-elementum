@@ -34,6 +34,15 @@ npm install ng-elementum --save
 
 ---
 
+## Compatibility
+
+| ng-elementum | Angular |
+| ------------ | ------- |
+| ^0 \|\| ^1   | 20      |
+| ^2           | 21      |
+
+---
+
 ## Zoneless requirement
 
 `ng-elementum` relies on Angular's **zoneless change detection** and must run **without `zone.js`**.
