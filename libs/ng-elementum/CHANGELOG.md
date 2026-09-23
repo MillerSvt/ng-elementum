@@ -1,3 +1,13 @@
+## 3.1.0 (2026-09-23)
+
+### 🚀 Features
+
+- **ng-elementum:** add connected/disconnected callbacks ([f1d2385](https://github.com/MillerSvt/ng-elementum/commit/f1d2385))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 # 3.0.0 (2026-09-07)
 
 ### 🚀 Features
