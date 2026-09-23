@@ -18,6 +18,10 @@ import {
 
 import { extractProjectableNodes } from './extract-projectable-nodes';
 import {
+  ɵNgElementumComponentHandler,
+  ɵNgElementumComponentHandlerProvider,
+} from './component-handler';
+import {
   camelToDashCase,
   isInputWithTransform,
   isWritableSignal,
@@ -71,12 +75,15 @@ export class NgElementumStrategy {
     // reconnected
     if (this.scheduledDestroy !== null) {
       this.scheduledDestroy = null;
+      this.runConnectedCallbacks();
       return;
     }
 
     if (this.componentRef === null) {
       this.initializeComponent(element);
     }
+
+    this.runConnectedCallbacks();
   }
 
   /**
@@ -89,10 +96,12 @@ export class NgElementumStrategy {
       return;
     }
 
-    // Schedule the component to be destroyed after a small timeout in case it is being
-    // moved elsewhere in the DOM
     this.scheduledDestroy = Symbol();
 
+    this.runDisconnectedCallbacks();
+
+    // Schedule the component to be destroyed after a small timeout in case it is being
+    // moved elsewhere in the DOM
     queueMicrotask(() => {
       if (this.scheduledDestroy === null) {
         return;
@@ -113,6 +122,26 @@ export class NgElementumStrategy {
         this.componentRef = null;
       }
     });
+  }
+
+  /** Runs the callbacks registered via `afterConnected` for this element. */
+  private runConnectedCallbacks(): void {
+    const handler = this.componentRef!.injector.get(
+      ɵNgElementumComponentHandler
+    );
+
+    if (handler.runConnected()) {
+      // Ensure the scheduled `afterNextRender` callbacks run even if no input
+      // change schedules a change detection cycle on its own.
+      this.cdScheduler.notify(pick<NotificationSource.CustomElement>(6));
+    }
+  }
+
+  /** Runs the callbacks registered via `afterDisconnected` for this element. */
+  private runDisconnectedCallbacks(): void {
+    this.componentRef!.injector
+      .get(ɵNgElementumComponentHandler)
+      .runDisconnected();
   }
 
   /**
@@ -193,6 +222,7 @@ export class NgElementumStrategy {
       environmentInjector: this.appRef.injector,
       projectableNodes: projectableNodes,
       hostElement: element,
+      directives: [ɵNgElementumComponentHandlerProvider],
     }));
 
     this.initializeOutputs(element, componentRef);

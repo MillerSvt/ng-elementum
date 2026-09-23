@@ -17,6 +17,14 @@ export {
   NgElementumConfig,
   NgElementumConstructor,
 } from './lib/create-custom-element';
+export {
+  afterConnected,
+  afterDisconnected,
+  afterNextConnected,
+  afterNextDisconnected,
+  NgElementumLifecycleCallback,
+  ɵNgElementumComponentHandler,
+} from './lib/component-handler';
 export { platformElementum } from './lib/platform';
 export { createApplicationSync as ɵcreateApplicationSync } from './lib/create-application-sync';
 export { providePlatformEffectInterop as ɵprovidePlatformEffectInterop } from './lib/provide-platform-effect-interop';

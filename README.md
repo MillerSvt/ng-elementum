@@ -216,9 +216,51 @@ await el.open(); // Calls MyComponent.open()
 await el.close(); // Calls MyComponent.close()
 ```
 
-✅ Preserves method context  
-✅ Works across Angular and non-Angular hosts  
+✅ Preserves method context
+✅ Works across Angular and non-Angular hosts
 ✅ Allows explicit public API definition
+
+### Lifecycle hooks: `afterConnected` / `afterDisconnected`
+
+`ng-elementum` lets you react to the custom element being connected to or disconnected from the DOM from within the
+component's constructor (or any injection context). This mirrors the native `connectedCallback` / `disconnectedCallback`
+of custom elements.
+
+```typescript
+import { Component, input } from '@angular/core';
+import { afterConnected, afterDisconnected } from 'ng-elementum';
+
+@Component({ standalone: true, template: `...` })
+export class MyComponent {
+  message = input('');
+
+  constructor() {
+    afterConnected(() => {
+      // Runs after the element is rendered, so inputs are available.
+      console.log('connected with message:', this.message());
+    });
+
+    afterDisconnected(() => {
+      // Runs when the element is removed from the DOM.
+      console.log('disconnected');
+    });
+  }
+}
+```
+
+Notes:
+
+- **`afterConnected(callback)`** runs each time the element is connected to the DOM. The callback is executed inside
+  `afterNextRender`, so the component is fully rendered and its inputs are accessible.
+- **`afterDisconnected(callback)`** runs each time the element is disconnected from the DOM.
+- **`afterNextConnected(callback)`** / **`afterNextDisconnected(callback)`** are one-shot variants: they run only the
+  next time the element is connected/disconnected, and are then discarded.
+- Both functions **must** be called within an injection context (e.g. the component constructor); calling them outside
+  throws an error.
+- The `afterConnected` / `afterNextConnected` callbacks themselves run **outside** an injection context and therefore
+  have **no access to DI** (`inject()` inside them throws).
+- Registration is scoped to the **shadow host** element (resolved with `{ host: true }`), so it is not possible to
+  register hooks on descendants of the shadow host.
 
 ---
 
