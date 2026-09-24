@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, Type } from '@angular/core';
+import { Component, ElementRef, inject, input, Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   ActivatedRouteSnapshot,
@@ -7,6 +7,7 @@ import {
   Router,
   RouteReuseStrategy,
   RouterOutlet,
+  withComponentInputBinding,
 } from '@angular/router';
 import {
   afterAttach,
@@ -490,5 +491,58 @@ describe('afterAttach / afterDetach', () => {
     ).querySelector<HTMLElement>('[data-testid="scroll"]')!;
 
     expect(restoredEl.scrollTop).toBe(150);
+  });
+
+  it('should expose inputs inside afterAttach after render, not at creation', async () => {
+    const atCreation: Array<string | undefined> = [];
+    const atAttach: Array<string | undefined> = [];
+
+    @Component({ standalone: true, template: '{{ id() }}' })
+    class Profile {
+      readonly id = input<string>();
+
+      constructor() {
+        atCreation.push(this.id());
+        afterAttach(() => atAttach.push(this.id()));
+      }
+    }
+
+    @Component({ standalone: true, template: 'other' })
+    class Other {}
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter(
+          [
+            { path: 'profile/:id', component: Profile },
+            { path: 'other', component: Other },
+          ],
+          withComponentInputBinding()
+        ),
+        { provide: RouteReuseStrategy, useClass: DetachingRouteReuseStrategy },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(App);
+    const router = TestBed.inject(Router);
+
+    fixture.detectChanges();
+
+    await router.navigate(['profile', '42']);
+    fixture.detectChanges();
+
+    // The input is not bound yet inside the constructor...
+    expect(atCreation).toEqual([undefined]);
+    // ...but is available by the time afterAttach runs (after render).
+    expect(atAttach).toEqual(['42']);
+
+    // Detach and re-attach the same component instance.
+    await router.navigate(['other']);
+    fixture.detectChanges();
+
+    await router.navigate(['profile', '42']);
+    fixture.detectChanges();
+
+    expect(atAttach).toEqual(['42', '42']);
   });
 });

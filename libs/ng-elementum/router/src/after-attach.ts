@@ -1,6 +1,7 @@
 import {
   DestroyRef,
   Injector,
+  afterNextRender,
   inject,
   assertInInjectionContext,
 } from '@angular/core';
@@ -218,6 +219,7 @@ function observeAncestorRouterOutlets({
   detach,
 }: RouterOutletCallbacks): void {
   const destroyRef = inject(DestroyRef);
+  const injector = inject(Injector);
   const outlets = getAncestorRouterOutlets();
 
   if (!outlets.length) {
@@ -231,10 +233,11 @@ function observeAncestorRouterOutlets({
       }
     | undefined;
 
-  // Initial creation of THIS component.
+  // Initial creation of THIS component. The callback runs inside
+  // `afterNextRender` so component inputs are available by the time it fires.
   outlets[0].activateEvents
     .pipe(first(), takeUntilDestroyed(destroyRef))
-    .subscribe(() => attach?.());
+    .subscribe(() => afterNextRender(() => attach?.(), { injector }));
 
   for (const outlet of outlets) {
     outlet.detachEvents
@@ -261,7 +264,8 @@ function observeAncestorRouterOutlets({
         }
 
         detached = undefined;
-        attach?.();
+
+        afterNextRender(() => attach?.(), { injector });
       });
   }
 }
