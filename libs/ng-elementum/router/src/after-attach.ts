@@ -233,11 +233,18 @@ function observeAncestorRouterOutlets({
       }
     | undefined;
 
-  // Initial creation of THIS component. The callback runs inside
-  // `afterNextRender` so component inputs are available by the time it fires.
-  outlets[0].activateEvents
-    .pipe(first(), takeUntilDestroyed(destroyRef))
-    .subscribe(() => afterNextRender(() => attach?.(), { injector }));
+  // Component created after its host route was already activated (e.g. a child
+  // rendered conditionally or asynchronously). `activateEvents` above already
+  // fired, so detect the already-activated outlet and fire the initial attach.
+  if (outlets[0].isActivated) {
+    afterNextRender(() => attach?.(), { injector });
+  } else {
+    // Initial creation of THIS component. The callback runs inside
+    // `afterNextRender` so component inputs are available by the time it fires.
+    outlets[0].activateEvents
+      .pipe(first(), takeUntilDestroyed(destroyRef))
+      .subscribe(() => afterNextRender(() => attach?.(), { injector }));
+  }
 
   for (const outlet of outlets) {
     outlet.detachEvents

@@ -1,4 +1,11 @@
-import { Component, ElementRef, inject, input, Type } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  inject,
+  input,
+  signal,
+  Type,
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   ActivatedRouteSnapshot,
@@ -70,13 +77,13 @@ class ShellA {}
 })
 class ShellB {}
 
-@Component({ standalone: true, template: 'a2' })
+@Component({ template: 'a2' })
 class A2 {}
 
-@Component({ standalone: true, template: 'b1' })
+@Component({ template: 'b1' })
 class B1 {}
 
-@Component({ standalone: true, template: 'b2' })
+@Component({ template: 'b2' })
 class B2 {}
 
 function createRoutes(a1: Type<unknown>) {
@@ -125,7 +132,7 @@ describe('afterAttach / afterDetach', () => {
     const nextAttached = vi.fn();
     const nextDetached = vi.fn();
 
-    @Component({ standalone: true, template: 'a1' })
+    @Component({ template: 'a1' })
     class A1 {
       constructor() {
         afterAttach(attached);
@@ -200,6 +207,105 @@ describe('afterAttach / afterDetach', () => {
     expect(nextDetached).not.toHaveBeenCalled();
   });
 
+  it('should fire for a child created after its host route is activated', async () => {
+    const attached = vi.fn();
+    const beforeDetached = vi.fn();
+    const detached = vi.fn();
+    const beforeNextDetached = vi.fn();
+    const nextAttached = vi.fn();
+    const nextDetached = vi.fn();
+
+    @Component({ selector: 'lib-child', template: '' })
+    class A1Child {
+      constructor() {
+        afterAttach(attached);
+        beforeDetach(beforeDetached);
+        afterDetach(detached);
+        beforeNextDetach(beforeNextDetached);
+        afterNextAttach(nextAttached);
+        afterNextDetach(nextDetached);
+      }
+    }
+
+    @Component({
+      template: '@if (isVisible()) {<lib-child/>}',
+      imports: [A1Child],
+    })
+    class A1 {
+      public readonly isVisible = signal(false);
+
+      constructor() {
+        requestAnimationFrame(() => this.isVisible.set(true));
+      }
+    }
+
+    const { router, fixture } = await setup(A1);
+
+    await router.navigate(['a', 'a1']);
+    fixture.detectChanges();
+
+    // The child is created on the next animation frame, so wait for it.
+    await new Promise(requestAnimationFrame);
+    fixture.detectChanges();
+
+    expect(attached).toHaveBeenCalledTimes(1);
+    expect(nextAttached).toHaveBeenCalledTimes(1);
+    expect(beforeDetached).not.toHaveBeenCalled();
+    expect(detached).not.toHaveBeenCalled();
+    expect(beforeNextDetached).not.toHaveBeenCalled();
+    expect(nextDetached).not.toHaveBeenCalled();
+
+    detached.mockReset();
+    beforeDetached.mockReset();
+    beforeNextDetached.mockReset();
+    nextDetached.mockReset();
+    attached.mockReset();
+    nextAttached.mockReset();
+    await router.navigate(['a', 'a2']);
+    fixture.detectChanges();
+
+    expect(attached).not.toHaveBeenCalled();
+    expect(nextAttached).not.toHaveBeenCalled();
+    expect(beforeDetached).toHaveBeenCalledTimes(1);
+    expect(detached).toHaveBeenCalledTimes(1);
+    expect(beforeNextDetached).toHaveBeenCalledTimes(1);
+    expect(nextDetached).toHaveBeenCalledTimes(1);
+
+    detached.mockReset();
+    beforeDetached.mockReset();
+    beforeNextDetached.mockReset();
+    nextDetached.mockReset();
+    attached.mockReset();
+    nextAttached.mockReset();
+    await router.navigate(['a', 'a1']);
+    fixture.detectChanges();
+
+    expect(attached).toHaveBeenCalledTimes(1);
+    expect(nextAttached).not.toHaveBeenCalled();
+    expect(beforeDetached).not.toHaveBeenCalled();
+    expect(detached).not.toHaveBeenCalled();
+    expect(beforeNextDetached).not.toHaveBeenCalled();
+    expect(nextDetached).not.toHaveBeenCalled();
+
+    // Repeated callbacks keep firing on every detach/attach cycle, while the
+    // one-shot variants have already been consumed.
+    detached.mockReset();
+    beforeDetached.mockReset();
+    beforeNextDetached.mockReset();
+    nextDetached.mockReset();
+    attached.mockReset();
+    nextAttached.mockReset();
+    await router.navigate(['a', 'a2']);
+    fixture.detectChanges();
+
+    expect(attached).not.toHaveBeenCalled();
+    expect(nextAttached).not.toHaveBeenCalled();
+    expect(beforeDetached).toHaveBeenCalledTimes(1);
+    expect(detached).toHaveBeenCalledTimes(1);
+    expect(beforeNextDetached).not.toHaveBeenCalled();
+    expect(nextDetached).not.toHaveBeenCalled();
+  });
+
   it('should fire when switching between branches from the root', async () => {
     const attached = vi.fn();
     const beforeDetached = vi.fn();
@@ -208,7 +314,7 @@ describe('afterAttach / afterDetach', () => {
     const nextAttached = vi.fn();
     const nextDetached = vi.fn();
 
-    @Component({ standalone: true, template: 'a1' })
+    @Component({ template: 'a1' })
     class A1 {
       constructor() {
         afterAttach(attached);
@@ -289,7 +395,7 @@ describe('afterAttach / afterDetach', () => {
     const nextAttached = vi.fn();
     const nextDetached = vi.fn();
 
-    @Component({ standalone: true, template: 'a1' })
+    @Component({ template: 'a1' })
     class A1 {
       constructor() {
         afterAttach(attached);
@@ -354,7 +460,7 @@ describe('afterAttach / afterDetach', () => {
     const nextAttached = vi.fn();
     const nextDetached = vi.fn();
 
-    @Component({ standalone: true, template: 'a1' })
+    @Component({ template: 'a1' })
     class A1 {
       constructor() {
         afterAttach(attached);
@@ -497,7 +603,7 @@ describe('afterAttach / afterDetach', () => {
     const atCreation: Array<string | undefined> = [];
     const atAttach: Array<string | undefined> = [];
 
-    @Component({ standalone: true, template: '{{ id() }}' })
+    @Component({ template: '{{ id() }}' })
     class Profile {
       readonly id = input<string>();
 
@@ -507,7 +613,7 @@ describe('afterAttach / afterDetach', () => {
       }
     }
 
-    @Component({ standalone: true, template: 'other' })
+    @Component({ template: 'other' })
     class Other {}
 
     TestBed.configureTestingModule({
