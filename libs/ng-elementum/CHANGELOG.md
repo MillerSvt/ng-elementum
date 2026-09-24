@@ -1,3 +1,13 @@
+## 3.3.1 (2026-09-24)
+
+### 🩹 Fixes
+
+- **ng-elementum:** fix reading inputs in afterAttach ([6154d6d](https://github.com/MillerSvt/ng-elementum/commit/6154d6d))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 3.3.0 (2026-09-24)
 
 ### 🚀 Features
