@@ -1,3 +1,13 @@
+## 3.2.0 (2026-09-24)
+
+### 🚀 Features
+
+- **ng-elementum:** add attach/detach route callbacks ([cafe7f3](https://github.com/MillerSvt/ng-elementum/commit/cafe7f3))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 3.1.0 (2026-09-23)
 
 ### 🚀 Features
