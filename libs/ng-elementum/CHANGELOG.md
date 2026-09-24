@@ -1,3 +1,13 @@
+## 3.3.0 (2026-09-24)
+
+### 🚀 Features
+
+- **ng-elementum:** add beforeDetached route callback ([4a13bee](https://github.com/MillerSvt/ng-elementum/commit/4a13bee))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 3.2.0 (2026-09-24)
 
 ### 🚀 Features
