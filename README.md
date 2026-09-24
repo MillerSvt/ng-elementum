@@ -309,6 +309,39 @@ customElements.define('router-element', RouterElement);
 
 This element owns its router and URL state, does not conflict with any other Angular app on the page, and supports programmatic navigation through its internal Router.
 
+### Router outlet lifecycle hooks: `afterAttach` / `afterDetach`
+
+`ng-elementum` lets you react to a routed component being attached to or detached from an ancestor `RouterOutlet`. This is useful for components kept alive via a route reuse strategy, e.g. to refresh data whenever a cached page is shown again.
+
+```typescript
+import { Component } from '@angular/core';
+import { afterAttach, afterDetach } from 'ng-elementum/router';
+
+@Component({ standalone: true, template: `...` })
+export class ProfilePage {
+  constructor() {
+    afterAttach(() => {
+      // Runs each time the page is (re)attached to a router outlet,
+      // including its initial activation.
+      this.reloadProfile();
+    });
+
+    afterDetach(() => {
+      // Runs when the page is detached from a router outlet.
+    });
+  }
+}
+```
+
+Notes:
+
+- **`afterAttach(callback)`** runs each time the component is attached to an ancestor `RouterOutlet`, including its **initial activation**.
+- **`afterDetach(callback)`** runs when the component is detached from an ancestor `RouterOutlet`.
+- **`afterNextAttach(callback)`** / **`afterNextDetach(callback)`** are one-shot variants: they run only the next time the component is attached/detached, and are then discarded.
+- The hooks observe **every** `RouterOutlet` up the injector hierarchy, so they also react when a parent route (and thus the whole subtree) is re-attached or removed.
+- If several ancestor outlets detach during a single navigation, `afterDetach` fires **only once**, and it does not fire again while the component is still detached.
+- All four functions **must** be called within an injection context (e.g. the component constructor); calling them outside throws an error.
+
 ---
 
 ## Using HttpClient in `platform` level
