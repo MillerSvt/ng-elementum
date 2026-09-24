@@ -1,3 +1,13 @@
+## 3.3.2 (2026-09-24)
+
+### 🩹 Fixes
+
+- **ng-elementum:** fix afterAttach on async created child ([100efae](https://github.com/MillerSvt/ng-elementum/commit/100efae))
+
+### ❤️ Thank You
+
+- Svyatoslav Zaytsev
+
 ## 3.3.1 (2026-09-24)
 
 ### 🩹 Fixes
